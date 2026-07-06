@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-cream-50 text-ink-700 font-sans antialiased;
+  }
+  ::selection {
+    @apply bg-bronze-500 text-cream-50;
+  }
+}
+
+@layer components {
+  .container-lux {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-ink-700 text-cream-100 font-medium tracking-wide text-sm uppercase transition-all duration-300 hover:bg-ink-600 hover:shadow-lg;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 border border-ink-700 text-ink-700 font-medium tracking-wide text-sm uppercase transition-all duration-300 hover:bg-ink-700 hover:text-cream-100;
+  }
+  .btn-bronze {
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-bronze-500 text-cream-50 font-medium tracking-wide text-sm uppercase transition-all duration-300 hover:bg-bronze-600 hover:shadow-lg;
+  }
+  .input-lux {
+    @apply w-full px-4 py-3 bg-cream-50 border border-sage-300 text-ink-700 placeholder-sage-500 focus:outline-none focus:border-bronze-400 transition-colors duration-200;
+  }
+  .label-lux {
+    @apply block text-xs font-medium tracking-widest uppercase text-ink-500 mb-2;
+  }
+  .section-title {
+    @apply font-serif text-3xl sm:text-4xl lg:text-5xl text-ink-700 font-light;
+  }
+  .eyebrow {
+    @apply text-xs font-medium tracking-[0.25em] uppercase text-bronze-500;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #E8D9CC 25%, #F3E4C9 50%, #E8D9CC 75%);
+    background-size: 1000px 100%;
+    @apply animate-shimmer;
+  }
+}
