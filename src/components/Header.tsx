@@ -42,7 +42,7 @@ export default function Header() {
     <>
       {/* Announcement bar */}
       <div className="bg-ink-700 text-cream-100 text-center py-2.5 text-xs tracking-widest uppercase">
-        Complimentary shipping on orders over KES 20,000
+        Complimentary shipping on orders over KES 10,000
       </div>
 
       <header
