@@ -160,7 +160,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="relative aspect-[4/3] overflow-hidden order-2 lg:order-1">
               <img
-                src="https://images.pexels.com/photos/3755761/pexels-photo-3755761.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                src="https://images.pexels.com/photos/6750828/pexels-photo-6750828.jpeg?auto=compress&cs=tinysrgb&w=1200"
                 alt="Craftsmanship"
                 className="w-full h-full object-cover"
               />
