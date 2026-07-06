@@ -24,7 +24,7 @@ export default function AboutPage() {
       <section className="relative h-[50vh] min-h-[400px] overflow-hidden bg-ink-700">
         <div className="absolute inset-0">
           <img
-            src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1920"
+            src="https://images.pexels.com/photos/5639804/pexels-photo-5639804.jpeg?auto=compress&cs=tinysrgb&w=1920"
             alt="About Eyarastore"
             className="w-full h-full object-cover opacity-50"
           />
