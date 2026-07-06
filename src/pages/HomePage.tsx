@@ -21,7 +21,7 @@ export default function HomePage() {
       <section className="relative h-[85vh] min-h-[600px] overflow-hidden bg-ink-700">
         <div className="absolute inset-0">
           <img
-            src="https://images.pexels.com/photos/50618/pexels-photo-50618.jpeg?auto=compress&cs=tinysrgb&w=1920"
+            src="https://images.pexels.com/photos/3800681/pexels-photo-3800681.jpeg?auto=compress&cs=tinysrgb&w=1920"
             alt="Eyarastore hero"
             className="w-full h-full object-cover opacity-60"
           />
@@ -160,7 +160,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="relative aspect-[4/3] overflow-hidden order-2 lg:order-1">
               <img
-                src="https://images.pexels.com/photos/5591342/pexels-photo-5591342.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                src="https://images.pexels.com/photos/6750828/pexels-photo-6750828.jpeg?auto=compress&cs=tinysrgb&w=1200"
                 alt="Craftsmanship"
                 className="w-full h-full object-cover"
               />
