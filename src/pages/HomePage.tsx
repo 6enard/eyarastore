@@ -31,7 +31,7 @@ export default function HomePage() {
         <div className="relative h-full container-lux flex items-center">
           <div className="max-w-xl">
             <p className="eyebrow text-cream-300 mb-5 animate-fade-up opacity-0" style={{ animationDelay: '200ms' }}>
-              New Collection — Autumn 2025
+              New Collection —  2026
             </p>
             <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl text-cream-100 font-light leading-[1.05] mb-6 animate-fade-up opacity-0" style={{ animationDelay: '350ms' }}>
               Modern luxury,<br />
