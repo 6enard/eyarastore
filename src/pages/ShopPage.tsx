@@ -12,7 +12,7 @@ export default function ShopPage({ categorySlug }: { categorySlug?: string }) {
   const { products, loading } = useProducts();
   const [sort, setSort] = useState<SortOption>('newest');
   const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 600]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 70000]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const activeCategory = categories.find((c) => c.slug === categorySlug);
@@ -64,11 +64,11 @@ export default function ShopPage({ categorySlug }: { categorySlug?: string }) {
   };
 
   const clearFilters = () => {
-    setPriceRange([0, 600]);
+    setPriceRange([0, 70000]);
     setSelectedTags([]);
   };
 
-  const hasActiveFilters = priceRange[0] !== 0 || priceRange[1] !== 600 || selectedTags.length > 0;
+  const hasActiveFilters = priceRange[0] !== 0 || priceRange[1] !== 70000 || selectedTags.length > 0;
 
   return (
     <div>

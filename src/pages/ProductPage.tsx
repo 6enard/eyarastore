@@ -206,7 +206,7 @@ export default function ProductPage({ slug }: { slug: string }) {
             <div className="grid grid-cols-3 gap-4 py-6 border-t border-b border-sage-200">
               <div className="flex flex-col items-center text-center gap-2">
                 <Truck size={20} className="text-bronze-500" strokeWidth={1.5} />
-                <p className="text-xs text-ink-600">Free shipping over $150</p>
+                <p className="text-xs text-ink-600">Free shipping over KES 20,000</p>
               </div>
               <div className="flex flex-col items-center text-center gap-2">
                 <RefreshCw size={20} className="text-bronze-500" strokeWidth={1.5} />

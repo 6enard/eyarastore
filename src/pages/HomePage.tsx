@@ -9,7 +9,7 @@ export default function HomePage() {
   const { categories } = useCategories();
 
   const features = [
-    { icon: Truck, title: 'Free Shipping', desc: 'On all orders over $150' },
+    { icon: Truck, title: 'Free Shipping', desc: 'On all orders over KES 20,000' },
     { icon: RefreshCw, title: 'Easy Returns', desc: '30-day return policy' },
     { icon: Shield, title: 'Secure Payment', desc: 'Encrypted checkout' },
     { icon: Headphones, title: '24/7 Support', desc: 'Dedicated customer care' },
