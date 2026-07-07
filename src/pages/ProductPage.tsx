@@ -64,14 +64,25 @@ export default function ProductPage({ slug }: { slug: string }) {
             <button onClick={() => navigate('/')} className="hover:text-bronze-500 transition-colors">Home</button>
             <ChevronRight size={12} />
             <button onClick={() => navigate('/shop')} className="hover:text-bronze-500 transition-colors">Shop</button>
-            {product.category && (
+            {product.demographic && (
               <>
                 <ChevronRight size={12} />
                 <button
-                  onClick={() => navigate(`/shop/${product.category!.slug}`)}
-                  className="hover:text-bronze-500 transition-colors"
+                  onClick={() => navigate(`/shop/${product.demographic}`)}
+                  className="hover:text-bronze-500 transition-colors capitalize"
                 >
-                  {product.category.name}
+                  {product.demographic}'s
+                </button>
+              </>
+            )}
+            {product.product_type && (
+              <>
+                <ChevronRight size={12} />
+                <button
+                  onClick={() => navigate(`/shop/${product.demographic}/${product.product_type}`)}
+                  className="hover:text-bronze-500 transition-colors capitalize"
+                >
+                  {product.product_type}
                 </button>
               </>
             )}
@@ -115,9 +126,11 @@ export default function ProductPage({ slug }: { slug: string }) {
 
           {/* Info */}
           <div className="lg:pt-4">
-            {product.category && (
-              <p className="eyebrow mb-3">{product.category.name}</p>
-            )}
+            <div className="flex items-center gap-2 mb-3">
+              <p className="eyebrow mb-0">{product.demographic}'s</p>
+              <span className="text-sage-300">|</span>
+              <p className="text-xs font-medium tracking-[0.2em] uppercase text-sage-500 mb-0">{product.product_type}</p>
+            </div>
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-ink-700 font-light mb-4 leading-tight">
               {product.name}
             </h1>
@@ -206,7 +219,7 @@ export default function ProductPage({ slug }: { slug: string }) {
             <div className="grid grid-cols-3 gap-4 py-6 border-t border-b border-sage-200">
               <div className="flex flex-col items-center text-center gap-2">
                 <Truck size={20} className="text-bronze-500" strokeWidth={1.5} />
-                <p className="text-xs text-ink-600">Free shipping over KES 20,000</p>
+                <p className="text-xs text-ink-600">Free shipping over KES 10,000</p>
               </div>
               <div className="flex flex-col items-center text-center gap-2">
                 <RefreshCw size={20} className="text-bronze-500" strokeWidth={1.5} />

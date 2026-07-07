@@ -74,11 +74,15 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       </div>
 
       <div className="space-y-1">
-        {product.category && (
+        <div className="flex items-center gap-2">
           <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-bronze-500">
-            {product.category.name}
+            {product.demographic}'s
           </p>
-        )}
+          <span className="text-sage-300">|</span>
+          <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-sage-500">
+            {product.product_type}
+          </p>
+        </div>
         <h3 className="font-serif text-lg text-ink-700 font-medium leading-snug group-hover:text-bronze-600 transition-colors">
           {product.name}
         </h3>

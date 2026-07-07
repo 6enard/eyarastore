@@ -27,7 +27,8 @@ export function useCategories() {
 }
 
 export function useProducts(options?: {
-  categorySlug?: string;
+  demographic?: string;
+  productType?: string;
   featuredOnly?: boolean;
   limit?: number;
 }) {
@@ -47,6 +48,15 @@ export function useProducts(options?: {
       if (options?.featuredOnly) {
         query = query.eq('featured', true);
       }
+
+      if (options?.demographic) {
+        query = query.eq('demographic', options.demographic);
+      }
+
+      if (options?.productType) {
+        query = query.eq('product_type', options.productType);
+      }
+
       if (options?.limit) {
         query = query.limit(options.limit);
       }
@@ -58,19 +68,13 @@ export function useProducts(options?: {
         setError(error.message);
         setProducts([]);
       } else {
-        let results = (data || []) as ProductWithCategory[];
-        if (options?.categorySlug) {
-          results = results.filter(
-            (p) => p.category?.slug === options.categorySlug
-          );
-        }
-        setProducts(results);
+        setProducts((data || []) as ProductWithCategory[]);
         setError(null);
       }
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [options?.categorySlug, options?.featuredOnly, options?.limit]);
+  }, [options?.demographic, options?.productType, options?.featuredOnly, options?.limit]);
 
   return { products, loading, error };
 }
@@ -122,14 +126,14 @@ export function useRelatedProducts(product: Product | null, limit = 4) {
         .from('products')
         .select('*, category:categories(*)')
         .neq('id', product.id)
-        .eq('category_id', product.category_id || '')
+        .eq('demographic', product.demographic || '')
         .limit(limit);
       if (cancelled) return;
       setProducts((data || []) as ProductWithCategory[]);
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [product?.id, limit]);
+  }, [product?.id, product?.demographic, limit]);
 
   return { products, loading };
 }

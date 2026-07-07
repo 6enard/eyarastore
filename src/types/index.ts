@@ -18,6 +18,8 @@ export interface Product {
   image_url: string;
   gallery: string[];
   category_id: string | null;
+  demographic: 'men' | 'women' | 'kids' | 'unisex';
+  product_type: 'clothes' | 'shoes' | 'accessories';
   rating: number;
   review_count: number;
   featured: boolean;

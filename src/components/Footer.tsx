@@ -1,11 +1,9 @@
 import { Instagram, Facebook, Twitter, Mail, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from '../context/RouterContext';
-import { useCategories } from '../hooks/useData';
 
 export default function Footer() {
   const { navigate } = useRouter();
-  const { categories } = useCategories();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -17,6 +15,16 @@ export default function Footer() {
       setTimeout(() => setSubscribed(false), 3000);
     }
   };
+
+  const shopLinks = [
+    { label: 'All Products', path: '/shop' },
+    { label: "Men's Clothes", path: '/shop/men/clothes' },
+    { label: "Men's Shoes", path: '/shop/men/shoes' },
+    { label: "Women's Clothes", path: '/shop/women/clothes' },
+    { label: "Women's Shoes", path: '/shop/women/shoes' },
+    { label: "Kids' Clothes", path: '/shop/kids/clothes' },
+    { label: "Kids' Shoes", path: '/shop/kids/shoes' },
+  ];
 
   return (
     <footer className="bg-ink-700 text-cream-100 mt-24">
@@ -63,25 +71,20 @@ export default function Footer() {
               Eyara<span className="text-bronze-400">store</span>
             </button>
             <p className="text-cream-200/60 text-sm leading-relaxed max-w-xs">
-              A curated collection of premium lifestyle products, thoughtfully designed and crafted to last.
+              Premium clothing and footwear for men, women, and kids. Quality you can trust for the whole family.
             </p>
           </div>
 
           <div>
             <h3 className="text-xs font-medium tracking-[0.2em] uppercase text-cream-300 mb-5">Shop</h3>
             <ul className="space-y-3">
-              <li>
-                <button onClick={() => navigate('/shop')} className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors">
-                  All Products
-                </button>
-              </li>
-              {categories.map((cat) => (
-                <li key={cat.id}>
+              {shopLinks.map((link) => (
+                <li key={link.path}>
                   <button
-                    onClick={() => navigate(`/shop/${cat.slug}`)}
+                    onClick={() => navigate(link.path)}
                     className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors"
                   >
-                    {cat.name}
+                    {link.label}
                   </button>
                 </li>
               ))}
@@ -128,7 +131,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Eyarastore. All rights reserved.
           </p>
           <p className="text-xs text-cream-200/50 tracking-wide">
-            Crafted with care for the discerning.
+            Quality fashion for the whole family.
           </p>
         </div>
       </div>
