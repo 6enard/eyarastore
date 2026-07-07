@@ -4,9 +4,9 @@ import { useProducts } from '../hooks/useData';
 import ProductCard from '../components/ProductCard';
 
 const demographics = [
-  { slug: 'men', name: 'Men', image: 'https://images.pexels.com/photos/1496647/pexels-photo-1496647.jpeg?auto=compress&cs=tinysrgb&w=800', description: "Premium men's fashion and footwear" },
-  { slug: 'women', name: 'Women', image: 'https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?auto=compress&cs=tinysrgb&w=800', description: "Elegant women's clothing and shoes" },
-  { slug: 'kids', name: 'Kids', image: 'https://images.pexels.com/photos/1620760/pexels-photo-1620760.jpeg?auto=compress&cs=tinysrgb&w=800', description: 'Quality clothing and shoes for children' },
+  { slug: 'men', name: 'Men', image: 'https://cdn.dummyjson.com/product-images/mens-shirts/man-plaid-shirt/1.webp', description: "Premium men's fashion and footwear" },
+  { slug: 'women', name: 'Women', image: 'https://cdn.dummyjson.com/product-images/womens-dresses/black-women%27s-gown/1.webp', description: "Elegant women's clothing and shoes" },
+  { slug: 'kids', name: 'Kids', image: 'https://cdn.dummyjson.com/product-images/tops/girl-summer-dress/1.webp', description: 'Quality clothing and shoes for children' },
 ];
 
 export default function HomePage() {
@@ -29,7 +29,7 @@ export default function HomePage() {
       <section className="relative h-[85vh] min-h-[600px] overflow-hidden bg-ink-700">
         <div className="absolute inset-0">
           <img
-            src="https://images.pexels.com/photos/3800681/pexels-photo-3800681.jpeg?auto=compress&cs=tinysrgb&w=1920"
+            src="https://cdn.dummyjson.com/product-images/womens-dresses/corset-leather-with-skirt/1.webp"
             alt="Eyarastore hero"
             className="w-full h-full object-cover opacity-60"
           />
@@ -203,7 +203,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="relative aspect-[4/3] overflow-hidden order-2 lg:order-1">
               <img
-                src="https://images.pexels.com/photos/6750828/pexels-photo-6750828.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                src="https://cdn.dummyjson.com/product-images/mens-shirts/blue-&-black-check-shirt/1.webp"
                 alt="Craftsmanship"
                 className="w-full h-full object-cover"
               />
