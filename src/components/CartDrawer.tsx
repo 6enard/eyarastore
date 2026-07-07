@@ -5,9 +5,17 @@ import { useRouter } from '../context/RouterContext';
 
 const WHATSAPP_NUMBER = '+254722456252';
 
+function generateOrderId(): string {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `EYA-${timestamp}-${random}`;
+}
+
 function generateWhatsAppMessage(items: { product: { name: string; price: number }; quantity: number }[], subtotal: number): string {
+  const orderId = generateOrderId();
   const lines = [
-    '*New Order from Eyarastore*',
+    `*New Order from Eyarastore*`,
+    `*Order ID: ${orderId}*`,
     '',
     '*Items:*',
   ];
