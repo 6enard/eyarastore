@@ -9,7 +9,6 @@ type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'rating';
 const demographics = [
   { slug: 'men', name: 'Men' },
   { slug: 'women', name: 'Women' },
-  { slug: 'kids', name: 'Kids' },
 ];
 
 const productTypes = [

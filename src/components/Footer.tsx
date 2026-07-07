@@ -22,8 +22,6 @@ export default function Footer() {
     { label: "Men's Shoes", path: '/shop/men/shoes' },
     { label: "Women's Clothes", path: '/shop/women/clothes' },
     { label: "Women's Shoes", path: '/shop/women/shoes' },
-    { label: "Kids' Clothes", path: '/shop/kids/clothes' },
-    { label: "Kids' Shoes", path: '/shop/kids/shoes' },
   ];
 
   return (
@@ -71,7 +69,7 @@ export default function Footer() {
               Eyara<span className="text-bronze-400">store</span>
             </button>
             <p className="text-cream-200/60 text-sm leading-relaxed max-w-xs">
-              Premium clothing and footwear for men, women, and kids. Quality you can trust for the whole family.
+              Premium clothing and footwear for men and women. Quality you can trust.
             </p>
           </div>
 
@@ -131,7 +129,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Eyarastore. All rights reserved.
           </p>
           <p className="text-xs text-cream-200/50 tracking-wide">
-            Quality fashion for the whole family.
+            Quality fashion for men and women.
           </p>
         </div>
       </div>

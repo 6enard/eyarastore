@@ -1,5 +1,24 @@
 const API_BASE = 'https://dummyjson.com';
 
+// Only these categories will be included - clothing and shoes for men, women, and kids
+const ALLOWED_CATEGORIES = [
+  'mens-shirts',
+  'mens-shoes',
+  'womens-dresses',
+  'womens-shoes',
+  'tops',
+];
+
+const CATEGORY_MAPPINGS: Record<string, { demographic: 'men' | 'women' | 'kids'; product_type: 'clothes' | 'shoes' }> = {
+  // Men's categories
+  'mens-shirts': { demographic: 'men', product_type: 'clothes' },
+  'mens-shoes': { demographic: 'men', product_type: 'shoes' },
+  // Women's categories
+  'womens-dresses': { demographic: 'women', product_type: 'clothes' },
+  'womens-shoes': { demographic: 'women', product_type: 'shoes' },
+  'tops': { demographic: 'women', product_type: 'clothes' },
+};
+
 export interface DummyJsonProduct {
   id: number;
   title: string;
@@ -63,8 +82,8 @@ export interface TransformedProduct {
   image_url: string;
   gallery: string[];
   category_id: string | null;
-  demographic: 'men' | 'women' | 'kids' | 'unisex';
-  product_type: 'clothes' | 'shoes' | 'accessories';
+  demographic: 'men' | 'women' | 'kids';
+  product_type: 'clothes' | 'shoes';
   rating: number;
   review_count: number;
   featured: boolean;
@@ -83,36 +102,6 @@ export interface TransformedCategory {
   created_at: string;
 }
 
-const CATEGORY_MAPPINGS: Record<string, { demographic: TransformedProduct['demographic']; product_type: TransformedProduct['product_type'] }> = {
-  // Men's categories
-  'mens-shirts': { demographic: 'men', product_type: 'clothes' },
-  'mens-watches': { demographic: 'men', product_type: 'accessories' },
-  'mens-shoes': { demographic: 'men', product_type: 'shoes' },
-  // Women's categories
-  'womens-dresses': { demographic: 'women', product_type: 'clothes' },
-  'womens-bags': { demographic: 'women', product_type: 'accessories' },
-  'womens-jewellery': { demographic: 'women', product_type: 'accessories' },
-  'womens-shoes': { demographic: 'women', product_type: 'shoes' },
-  'tops': { demographic: 'women', product_type: 'clothes' },
-  // Kids/Unisex categories
-  'skin-care': { demographic: 'unisex', product_type: 'accessories' },
-  'fragrances': { demographic: 'unisex', product_type: 'accessories' },
-  'beauty': { demographic: 'women', product_type: 'accessories' },
-  // Accessories and other
-  'sunglasses': { demographic: 'unisex', product_type: 'accessories' },
-  'smartphones': { demographic: 'unisex', product_type: 'accessories' },
-  'laptops': { demographic: 'unisex', product_type: 'accessories' },
-  'tablets': { demographic: 'unisex', product_type: 'accessories' },
-  'mobile-accessories': { demographic: 'unisex', product_type: 'accessories' },
-  'groceries': { demographic: 'unisex', product_type: 'accessories' },
-  'home-decoration': { demographic: 'unisex', product_type: 'accessories' },
-  'furniture': { demographic: 'unisex', product_type: 'accessories' },
-  'kitchen-accessories': { demographic: 'unisex', product_type: 'accessories' },
-  'vehicle': { demographic: 'unisex', product_type: 'accessories' },
-  'motorcycle': { demographic: 'unisex', product_type: 'accessories' },
-  'sports-accessories': { demographic: 'unisex', product_type: 'accessories' },
-};
-
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -120,13 +109,45 @@ function slugify(text: string): string {
     .replace(/[^\w-]+/g, '');
 }
 
-function getCategoryMapping(category: string): { demographic: TransformedProduct['demographic']; product_type: TransformedProduct['product_type'] } {
-  return CATEGORY_MAPPINGS[category] || { demographic: 'unisex', product_type: 'accessories' };
+function getBestImageUrl(product: DummyJsonProduct): string {
+  // Use the first high-quality image from the images array, fallback to thumbnail
+  if (product.images && product.images.length > 0) {
+    // Prefer images that are higher resolution (usually larger file size in URL naming)
+    const sortedImages = [...product.images].sort((a, b) => {
+      // Prefer images without 'thumbnail' in the URL
+      const aIsThumb = a.toLowerCase().includes('thumbnail');
+      const bIsThumb = b.toLowerCase().includes('thumbnail');
+      if (aIsThumb && !bIsThumb) return 1;
+      if (!aIsThumb && bIsThumb) return -1;
+      return 0;
+    });
+    return sortedImages[0];
+  }
+  return product.thumbnail || '';
 }
 
-export function transformProduct(product: DummyJsonProduct): TransformedProduct {
-  const category = product.category || 'other';
-  const { demographic, product_type } = getCategoryMapping(category);
+function getGalleryImages(product: DummyJsonProduct): string[] {
+  if (!product.images || product.images.length === 0) return [];
+  // Get up to 4 unique high-quality images, excluding thumbnails
+  return product.images
+    .filter((img) => !img.toLowerCase().includes('thumbnail'))
+    .slice(0, 4);
+}
+
+export function transformProduct(product: DummyJsonProduct): TransformedProduct | null {
+  const category = product.category || '';
+
+  // Skip products not in allowed categories
+  if (!ALLOWED_CATEGORIES.includes(category)) {
+    return null;
+  }
+
+  const mapping = CATEGORY_MAPPINGS[category];
+  if (!mapping) {
+    return null;
+  }
+
+  const { demographic, product_type } = mapping;
   const hasDiscount = product.discountPercentage > 0;
   const comparePrice = hasDiscount ? Math.round(product.price / (1 - product.discountPercentage / 100)) : null;
 
@@ -137,8 +158,8 @@ export function transformProduct(product: DummyJsonProduct): TransformedProduct 
     description: product.description,
     price: Math.round(product.price),
     compare_at_price: comparePrice,
-    image_url: product.thumbnail || product.images[0] || '',
-    gallery: product.images.slice(0, 4),
+    image_url: getBestImageUrl(product),
+    gallery: getGalleryImages(product),
     category_id: category,
     demographic,
     product_type,
@@ -168,7 +189,10 @@ export async function fetchAllProducts(): Promise<TransformedProduct[]> {
     skip += limit;
   } while (skip < total);
 
-  return allProducts.map(transformProduct);
+  // Transform and filter out nulls (products not in allowed categories)
+  return allProducts
+    .map(transformProduct)
+    .filter((p): p is TransformedProduct => p !== null);
 }
 
 export async function fetchProductById(id: number): Promise<TransformedProduct | null> {
@@ -187,7 +211,9 @@ export async function fetchProductsByCategory(category: string): Promise<Transfo
     throw new Error(`Failed to fetch products by category: ${response.statusText}`);
   }
   const data: DummyJsonProductsResponse = await response.json();
-  return data.products.map(transformProduct);
+  return data.products
+    .map(transformProduct)
+    .filter((p): p is TransformedProduct => p !== null);
 }
 
 export async function fetchCategories(): Promise<TransformedCategory[]> {
@@ -196,15 +222,18 @@ export async function fetchCategories(): Promise<TransformedCategory[]> {
     throw new Error(`Failed to fetch categories: ${response.statusText}`);
   }
   const categories: DummyJsonCategory[] = await response.json();
-  return categories.map((cat, index) => ({
-    id: cat.slug,
-    name: cat.name || cat.slug,
-    slug: cat.slug,
-    description: null,
-    image_url: null,
-    sort_order: index,
-    created_at: new Date().toISOString(),
-  }));
+
+  return categories
+    .filter((cat) => ALLOWED_CATEGORIES.includes(cat.slug))
+    .map((cat, index) => ({
+      id: cat.slug,
+      name: cat.name || cat.slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      slug: cat.slug,
+      description: null,
+      image_url: null,
+      sort_order: index,
+      created_at: new Date().toISOString(),
+    }));
 }
 
 export async function searchProducts(query: string): Promise<TransformedProduct[]> {
@@ -213,5 +242,7 @@ export async function searchProducts(query: string): Promise<TransformedProduct[
     throw new Error(`Failed to search products: ${response.statusText}`);
   }
   const data: DummyJsonProductsResponse = await response.json();
-  return data.products.map(transformProduct);
+  return data.products
+    .map(transformProduct)
+    .filter((p): p is TransformedProduct => p !== null);
 }

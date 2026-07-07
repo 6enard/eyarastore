@@ -6,14 +6,12 @@ import ProductCard from '../components/ProductCard';
 const demographics = [
   { slug: 'men', name: 'Men', image: 'https://cdn.dummyjson.com/product-images/mens-shirts/man-plaid-shirt/1.webp', description: "Premium men's fashion and footwear" },
   { slug: 'women', name: 'Women', image: 'https://cdn.dummyjson.com/product-images/womens-dresses/black-women%27s-gown/1.webp', description: "Elegant women's clothing and shoes" },
-  { slug: 'kids', name: 'Kids', image: 'https://cdn.dummyjson.com/product-images/tops/girl-summer-dress/1.webp', description: 'Quality clothing and shoes for children' },
 ];
 
 export default function HomePage() {
   const { navigate } = useRouter();
   const { products: menProducts } = useProducts({ demographic: 'men', limit: 4 });
   const { products: womenProducts } = useProducts({ demographic: 'women', limit: 4 });
-  const { products: kidsProducts } = useProducts({ demographic: 'kids', limit: 4 });
 
   const features = [
     { icon: Truck, title: 'Free Shipping', desc: 'On all orders over KES 10,000' },
@@ -41,11 +39,11 @@ export default function HomePage() {
               New Collection — 2026
             </p>
             <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl text-cream-100 font-light leading-[1.05] mb-6 animate-fade-up opacity-0" style={{ animationDelay: '350ms' }}>
-              Style for everyone,<br />
-              <span className="italic text-cream-200">at every age</span>
+              Timeless style,<br />
+              <span className="italic text-cream-200">for him and her</span>
             </h1>
             <p className="text-cream-200/80 text-lg leading-relaxed mb-8 max-w-md animate-fade-up opacity-0" style={{ animationDelay: '500ms' }}>
-              Discover premium clothing and footwear for men, women, and kids. Crafted with care, designed to last.
+              Discover premium clothing and footwear for men and women. Crafted with care, designed to last.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 animate-fade-up opacity-0" style={{ animationDelay: '650ms' }}>
               <button
@@ -95,10 +93,10 @@ export default function HomePage() {
         <div className="container-lux">
           <div className="text-center mb-12">
             <p className="eyebrow mb-3">Shop For</p>
-            <h2 className="section-title">Men, Women & Kids</h2>
+            <h2 className="section-title">Men & Women</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
             {demographics.map((demo, i) => (
               <button
                 key={demo.slug}
@@ -172,32 +170,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Kids' Collection */}
-      <section className="py-16 lg:py-20 bg-cream-100">
-        <div className="container-lux">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
-            <div>
-              <p className="eyebrow mb-3">For the Little Ones</p>
-              <h2 className="section-title">Kids' Collection</h2>
-            </div>
-            <button
-              onClick={() => navigate('/shop/kids')}
-              className="inline-flex items-center gap-2 text-sm tracking-widest uppercase text-ink-600 hover:text-bronze-500 transition-colors group"
-            >
-              View All Kids'
-              <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-            </button>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
-            {kidsProducts.slice(0, 4).map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Editorial banner */}
-      <section className="py-20 lg:py-28">
+      <section className="py-20 lg:py-28 bg-cream-100">
         <div className="container-lux">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="relative aspect-[4/3] overflow-hidden order-2 lg:order-1">
@@ -210,13 +184,13 @@ export default function HomePage() {
             <div className="order-1 lg:order-2">
               <p className="eyebrow mb-4">Our Philosophy</p>
               <h2 className="section-title mb-6">
-                Quality for the<br />whole family
+                Quality you<br />can feel
               </h2>
               <p className="text-ink-600 leading-relaxed mb-4">
-                Every piece in our collection is selected for its quality, craftsmanship, and timeless design. From premium men's oxford shirts to delicate girls' dresses, we ensure each item meets our exacting standards.
+                Every piece in our collection is selected for its quality, craftsmanship, and timeless design. From premium men's oxford shirts to elegant women's dresses, we ensure each item meets our exacting standards.
               </p>
               <p className="text-ink-600 leading-relaxed mb-8">
-                Whether you're shopping for yourself, your partner, or your children, you'll find pieces that are made to last.
+                Whether you're shopping for yourself or someone special, you'll find pieces that are made to last.
               </p>
               <button onClick={() => navigate('/about')} className="btn-outline">
                 Read Our Story
@@ -237,7 +211,7 @@ export default function HomePage() {
               ))}
             </div>
             <blockquote className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light leading-relaxed italic mb-8 text-balance">
-              "I love that I can shop for myself, my husband, and the kids all in one place. The quality is exceptional across all categories."
+              "The quality is exceptional. I found pieces for myself and my partner that we both love. The attention to detail is remarkable."
             </blockquote>
             <div>
               <p className="font-medium text-cream-100">Sarah Mitchell</p>
