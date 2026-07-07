@@ -1,28 +1,15 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import type { Product, Category, ProductWithCategory } from '../types';
+import { useMemo } from 'react';
+import { useData } from '../context/DataContext';
+import type { TransformedProduct, TransformedCategory } from '../lib/dummyjson';
+
+export type { TransformedProduct as Product, TransformedCategory as Category };
+
+export type ProductWithCategory = TransformedProduct & {
+  category?: TransformedCategory | null;
+};
 
 export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('sort_order', { ascending: true });
-      if (cancelled) return;
-      if (error) setError(error.message);
-      else setCategories(data || []);
-      setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
+  const { categories, loading, error } = useData();
   return { categories, loading, error };
 }
 
@@ -32,108 +19,55 @@ export function useProducts(options?: {
   featuredOnly?: boolean;
   limit?: number;
 }) {
-  const [products, setProducts] = useState<ProductWithCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { products, loading, error } = useData();
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      let query = supabase
-        .from('products')
-        .select('*, category:categories(*)')
-        .order('created_at', { ascending: false });
+  const filteredProducts = useMemo(() => {
+    let result = [...products];
 
-      if (options?.featuredOnly) {
-        query = query.eq('featured', true);
-      }
+    if (options?.demographic) {
+      result = result.filter((p) => p.demographic === options.demographic);
+    }
 
-      if (options?.demographic) {
-        query = query.eq('demographic', options.demographic);
-      }
+    if (options?.productType) {
+      result = result.filter((p) => p.product_type === options.productType);
+    }
 
-      if (options?.productType) {
-        query = query.eq('product_type', options.productType);
-      }
+    if (options?.featuredOnly) {
+      result = result.filter((p) => p.featured);
+    }
 
-      if (options?.limit) {
-        query = query.limit(options.limit);
-      }
+    result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-      const { data, error } = await query;
-      if (cancelled) return;
+    if (options?.limit) {
+      result = result.slice(0, options.limit);
+    }
 
-      if (error) {
-        setError(error.message);
-        setProducts([]);
-      } else {
-        setProducts((data || []) as ProductWithCategory[]);
-        setError(null);
-      }
-      setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [options?.demographic, options?.productType, options?.featuredOnly, options?.limit]);
+    return result;
+  }, [products, options?.demographic, options?.productType, options?.featuredOnly, options?.limit]);
 
-  return { products, loading, error };
+  return { products: filteredProducts, loading, error };
 }
 
 export function useProduct(slug: string | undefined) {
-  const [product, setProduct] = useState<ProductWithCategory | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { products, loading, error } = useData();
 
-  useEffect(() => {
-    if (!slug) {
-      setProduct(null);
-      setLoading(false);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('*, category:categories(*)')
-        .eq('slug', slug)
-        .maybeSingle();
-      if (cancelled) return;
-      if (error) setError(error.message);
-      else setProduct(data as ProductWithCategory | null);
-      setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [slug]);
+  const product = useMemo(() => {
+    if (!slug) return null;
+    return products.find((p) => p.slug === slug) || null;
+  }, [products, slug]);
 
   return { product, loading, error };
 }
 
-export function useRelatedProducts(product: Product | null, limit = 4) {
-  const [products, setProducts] = useState<ProductWithCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+export function useRelatedProducts(product: TransformedProduct | null, limit = 4) {
+  const { products } = useData();
 
-  useEffect(() => {
-    if (!product) {
-      setProducts([]);
-      setLoading(false);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      const { data } = await supabase
-        .from('products')
-        .select('*, category:categories(*)')
-        .neq('id', product.id)
-        .eq('demographic', product.demographic || '')
-        .limit(limit);
-      if (cancelled) return;
-      setProducts((data || []) as ProductWithCategory[]);
-      setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [product?.id, product?.demographic, limit]);
+  const relatedProducts = useMemo(() => {
+    if (!product) return [];
+    return products
+      .filter((p) => p.id !== product.id && p.demographic === product.demographic)
+      .slice(0, limit);
+  }, [products, product, limit]);
 
-  return { products, loading };
+  return { products: relatedProducts, loading: false };
 }

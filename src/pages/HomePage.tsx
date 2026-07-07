@@ -11,7 +11,6 @@ const demographics = [
 
 export default function HomePage() {
   const { navigate } = useRouter();
-  const { products, loading } = useProducts({ featuredOnly: true, limit: 8 });
   const { products: menProducts } = useProducts({ demographic: 'men', limit: 4 });
   const { products: womenProducts } = useProducts({ demographic: 'women', limit: 4 });
   const { products: kidsProducts } = useProducts({ demographic: 'kids', limit: 4 });
