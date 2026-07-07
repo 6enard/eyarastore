@@ -1,11 +1,42 @@
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingBag, MessageCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatPrice } from '../lib/format';
 import { useRouter } from '../context/RouterContext';
 
+const WHATSAPP_NUMBER = '+254722456252';
+
+function generateWhatsAppMessage(items: { product: { name: string; price: number }; quantity: number }[], subtotal: number): string {
+  const lines = [
+    '*New Order from Eyarastore*',
+    '',
+    '*Items:*',
+  ];
+
+  items.forEach((item, index) => {
+    lines.push(`${index + 1}. ${item.product.name}`);
+    lines.push(`   Qty: ${item.quantity} × ${formatPrice(item.product.price)} = ${formatPrice(item.product.price * item.quantity)}`);
+  });
+
+  lines.push('');
+  lines.push(`*Subtotal: ${formatPrice(subtotal)}*`);
+  lines.push('');
+  lines.push('Please confirm shipping and payment details. Thank you!');
+
+  return lines.join('\n');
+}
+
 export default function CartDrawer() {
-  const { items, isOpen, closeCart, removeItem, updateQuantity, subtotal, itemCount } = useCart();
+  const { items, isOpen, closeCart, removeItem, updateQuantity, subtotal, itemCount, clearCart } = useCart();
   const { navigate } = useRouter();
+
+  const handleCheckout = () => {
+    const message = generateWhatsAppMessage(items, subtotal);
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER.replace(/\+/g, '')}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+    clearCart();
+    closeCart();
+  };
 
   return (
     <>
@@ -124,10 +155,10 @@ export default function CartDrawer() {
               <span className="text-sm tracking-wide text-ink-500 uppercase">Subtotal</span>
               <span className="font-serif text-2xl text-ink-700 font-medium">{formatPrice(subtotal)}</span>
             </div>
-            <p className="text-xs text-sage-500">Shipping and taxes calculated at checkout.</p>
-            <button className="btn-primary w-full">
-              Proceed to Checkout
-              <ArrowRight size={16} />
+            <p className="text-xs text-sage-500">Shipping & payment details discussed via WhatsApp.</p>
+            <button onClick={handleCheckout} className="btn-bronze w-full">
+              <MessageCircle size={18} />
+              Order via WhatsApp
             </button>
             <button
               onClick={closeCart}
