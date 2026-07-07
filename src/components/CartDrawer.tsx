@@ -14,50 +14,25 @@ function generateOrderId(): string {
 function generateWhatsAppMessage(items: { product: { name: string; price: number }; quantity: number }[], subtotal: number): string {
   const orderId = generateOrderId();
   const date = new Date();
-  const dateStr = date.toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' });
-  const timeStr = date.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' });
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const dateStr = date.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const lines = [
-    `🛒 *EYARASTORE*`,
-    `━━━━━━━━━━━━━━━━━━━━`,
-    '',
-    `📋 *ORDER RECEIPT*`,
-    '',
-    `*Order ID:* ${orderId}`,
-    `*Date:* ${dateStr}`,
-    `*Time:* ${timeStr}`,
-    '',
-    `━━━━━━━━━━━━━━━━━━━━`,
-    `📦 *ORDER DETAILS*`,
-    `━━━━━━━━━━━━━━━━━━━━`,
-    '',
+    `*EYARASTORE*`,
+    `Order Receipt`,
+    `Order ID: ${orderId}`,
+    `Date: ${dateStr}`,
+    `──────────────────`,
   ];
 
-  items.forEach((item, index) => {
-    lines.push(`*${index + 1}.* ${item.product.name}`);
-    lines.push(`    Qty: ${item.quantity} × ${formatPrice(item.product.price)}`);
-    lines.push(`    Line Total: ${formatPrice(item.product.price * item.quantity)}`);
-    lines.push('');
+  items.forEach((item) => {
+    lines.push(item.product.name);
+    lines.push(`${item.quantity} × Ksh ${item.product.price.toLocaleString('en-KE')}`);
   });
 
-  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
-  lines.push(`💰 *ORDER SUMMARY*`);
-  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
-  lines.push('');
-  lines.push(`Items (${totalItems}): ${formatPrice(subtotal)}`);
-  lines.push(`*TOTAL: ${formatPrice(subtotal)}*`);
-  lines.push('');
-  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
-  lines.push('');
-  lines.push(`📞 *NEXT STEPS*`);
-  lines.push('');
-  lines.push(`Our team will contact you shortly to confirm:`);
-  lines.push(`• Shipping method & delivery address`);
-  lines.push(`• Payment options (M-Pesa, Bank Transfer)`);
-  lines.push(`• Estimated delivery time`);
-  lines.push('');
-  lines.push(`Thank you for shopping with Eyarastore! 🙏`);
+  lines.push(`──────────────────`);
+  lines.push(`*Total: Ksh ${subtotal.toLocaleString('en-KE')}*`);
+  lines.push(`We'll contact you to confirm delivery and payment.`);
+  lines.push(`Thank you for your order!`);
 
   return lines.join('\n');
 }
