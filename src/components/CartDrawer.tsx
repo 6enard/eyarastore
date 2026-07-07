@@ -17,7 +17,7 @@ function generateWhatsAppMessage(items: { product: { name: string; price: number
   const dateStr = date.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const lines = [
-    `*EYARASTORE*`,
+    `EYARASTORE`,
     `Order Receipt`,
     `Order ID: ${orderId}`,
     `Date: ${dateStr}`,
@@ -30,7 +30,7 @@ function generateWhatsAppMessage(items: { product: { name: string; price: number
   });
 
   lines.push(`──────────────────`);
-  lines.push(`*Total: Ksh ${subtotal.toLocaleString('en-KE')}*`);
+  lines.push(`Total: Ksh ${subtotal.toLocaleString('en-KE')}`);
   lines.push(`We'll contact you to confirm delivery and payment.`);
   lines.push(`Thank you for your order!`);
 
