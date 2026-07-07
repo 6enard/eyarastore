@@ -13,22 +13,51 @@ function generateOrderId(): string {
 
 function generateWhatsAppMessage(items: { product: { name: string; price: number }; quantity: number }[], subtotal: number): string {
   const orderId = generateOrderId();
+  const date = new Date();
+  const dateStr = date.toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' });
+  const timeStr = date.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' });
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+
   const lines = [
-    `*New Order from Eyarastore*`,
-    `*Order ID: ${orderId}*`,
+    `🛒 *EYARASTORE*`,
+    `━━━━━━━━━━━━━━━━━━━━`,
     '',
-    '*Items:*',
+    `📋 *ORDER RECEIPT*`,
+    '',
+    `*Order ID:* ${orderId}`,
+    `*Date:* ${dateStr}`,
+    `*Time:* ${timeStr}`,
+    '',
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `📦 *ORDER DETAILS*`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    '',
   ];
 
   items.forEach((item, index) => {
-    lines.push(`${index + 1}. ${item.product.name}`);
-    lines.push(`   Qty: ${item.quantity} × ${formatPrice(item.product.price)} = ${formatPrice(item.product.price * item.quantity)}`);
+    lines.push(`*${index + 1}.* ${item.product.name}`);
+    lines.push(`    Qty: ${item.quantity} × ${formatPrice(item.product.price)}`);
+    lines.push(`    Line Total: ${formatPrice(item.product.price * item.quantity)}`);
+    lines.push('');
   });
 
+  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+  lines.push(`💰 *ORDER SUMMARY*`);
+  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
   lines.push('');
-  lines.push(`*Subtotal: ${formatPrice(subtotal)}*`);
+  lines.push(`Items (${totalItems}): ${formatPrice(subtotal)}`);
+  lines.push(`*TOTAL: ${formatPrice(subtotal)}*`);
   lines.push('');
-  lines.push('Please confirm shipping and payment details. Thank you!');
+  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+  lines.push('');
+  lines.push(`📞 *NEXT STEPS*`);
+  lines.push('');
+  lines.push(`Our team will contact you shortly to confirm:`);
+  lines.push(`• Shipping method & delivery address`);
+  lines.push(`• Payment options (M-Pesa, Bank Transfer)`);
+  lines.push(`• Estimated delivery time`);
+  lines.push('');
+  lines.push(`Thank you for shopping with Eyarastore! 🙏`);
 
   return lines.join('\n');
 }
