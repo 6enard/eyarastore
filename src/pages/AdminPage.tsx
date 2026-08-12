@@ -5,6 +5,7 @@ import {
   Star, ChevronLeft, Save, AlertTriangle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { ImageUpload, GalleryUpload } from '../components/ImageUpload';
 import { supabase } from '../lib/supabase';
 import { useData } from '../context/DataContext';
 import type { Product, Category } from '../hooks/useData';
@@ -360,7 +361,7 @@ function ProductForm({ product, categories, isEdit, onSave, onCancel }: {
     price: product?.price?.toString() || '',
     compare_at_price: product?.compare_at_price?.toString() || '',
     image_url: product?.image_url || '',
-    gallery: (product?.gallery || []).join('\n'),
+    gallery: (product?.gallery || []),
     category_id: product?.category_id || '',
     demographic: product?.demographic || 'men',
     product_type: product?.product_type || 'clothes',
@@ -392,7 +393,7 @@ function ProductForm({ product, categories, isEdit, onSave, onCancel }: {
       price: parseInt(form.price) || 0,
       compare_at_price: form.compare_at_price ? parseInt(form.compare_at_price) : null,
       image_url: form.image_url || null,
-      gallery: form.gallery.split('\n').map((g) => g.trim()).filter(Boolean),
+      gallery: form.gallery,
       category_id: form.category_id || null,
       demographic: form.demographic,
       product_type: form.product_type,
@@ -483,30 +484,17 @@ function ProductForm({ product, categories, isEdit, onSave, onCancel }: {
           </FormField>
         </div>
 
-        <FormField label="Primary Image URL">
-          <input
-            type="url"
-            value={form.image_url}
-            onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-            className="input-lux"
-            placeholder="https://..."
-          />
-          {form.image_url && (
-            <div className="mt-2 w-24 h-28 bg-cream-100 overflow-hidden">
-              <img src={form.image_url} alt="" className="w-full h-full object-cover" />
-            </div>
-          )}
-        </FormField>
+        <ImageUpload
+          label="Primary Image"
+          value={form.image_url}
+          onChange={(url) => setForm({ ...form, image_url: url })}
+        />
 
-        <FormField label="Gallery Images (one URL per line)">
-          <textarea
-            value={form.gallery}
-            onChange={(e) => setForm({ ...form, gallery: e.target.value })}
-            rows={4}
-            className="input-lux resize-none text-sm"
-            placeholder="https://...&#10;https://...&#10;https://..."
-          />
-        </FormField>
+        <GalleryUpload
+          label="Gallery Images"
+          value={form.gallery}
+          onChange={(urls) => setForm({ ...form, gallery: urls })}
+        />
 
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Category">
@@ -723,15 +711,12 @@ function CategoryForm({ category, isEdit, onSave, onCancel }: {
           />
         </FormField>
 
-        <FormField label="Image URL">
-          <input
-            type="url"
-            value={form.image_url}
-            onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-            className="input-lux"
-            placeholder="https://..."
-          />
-        </FormField>
+        <ImageUpload
+          label="Category Image"
+          value={form.image_url}
+          onChange={(url) => setForm({ ...form, image_url: url })}
+          aspect="aspect-square"
+        />
 
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Demographic">
