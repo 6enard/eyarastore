@@ -1,11 +1,41 @@
 import { useMemo } from 'react';
 import { useData } from '../context/DataContext';
-import type { TransformedProduct, TransformedCategory } from '../lib/dummyjson';
 
-export type { TransformedProduct as Product, TransformedCategory as Category };
+export interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  price: number;
+  compare_at_price: number | null;
+  image_url: string | null;
+  gallery: string[];
+  category_id: string | null;
+  demographic: 'men' | 'women' | 'kids';
+  product_type: 'clothes' | 'shoes';
+  rating: number;
+  review_count: number;
+  featured: boolean;
+  in_stock: boolean;
+  tags: string[];
+  created_at: string;
+  updated_at?: string;
+}
 
-export type ProductWithCategory = TransformedProduct & {
-  category?: TransformedCategory | null;
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  image_url: string | null;
+  demographic: 'men' | 'women' | 'kids';
+  product_type: 'clothes' | 'shoes';
+  sort_order: number;
+  created_at: string;
+}
+
+export type ProductWithCategory = Product & {
+  category?: Category | null;
 };
 
 export function useCategories() {
@@ -59,7 +89,7 @@ export function useProduct(slug: string | undefined) {
   return { product, loading, error };
 }
 
-export function useRelatedProducts(product: TransformedProduct | null, limit = 4) {
+export function useRelatedProducts(product: Product | null, limit = 4) {
   const { products } = useData();
 
   const relatedProducts = useMemo(() => {

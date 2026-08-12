@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
-import { fetchAllProducts, fetchCategories, type TransformedProduct, type TransformedCategory } from '../lib/dummyjson';
+import { supabase } from '../lib/supabase';
+import type { Product, Category } from '../hooks/useData';
 
 interface DataContextValue {
-  products: TransformedProduct[];
-  categories: TransformedCategory[];
+  products: Product[];
+  categories: Category[];
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -12,8 +13,8 @@ interface DataContextValue {
 const DataContext = createContext<DataContextValue | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<TransformedProduct[]>([]);
-  const [categories, setCategories] = useState<TransformedCategory[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,12 +22,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const [productsData, categoriesData] = await Promise.all([
-        fetchAllProducts(),
-        fetchCategories(),
+      const [productsRes, categoriesRes] = await Promise.all([
+        supabase.from('products').select('*').order('created_at', { ascending: false }),
+        supabase.from('categories').select('*').order('sort_order', { ascending: true }),
       ]);
-      setProducts(productsData);
-      setCategories(categoriesData);
+
+      if (productsRes.error) throw productsRes.error;
+      if (categoriesRes.error) throw categoriesRes.error;
+
+      setProducts((productsRes.data || []) as Product[]);
+      setCategories((categoriesRes.data || []) as Category[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
@@ -40,13 +45,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   return (
     <DataContext.Provider
-      value={{
-        products,
-        categories,
-        loading,
-        error,
-        refetch: loadData,
-      }}
+      value={{ products, categories, loading, error, refetch: loadData }}
     >
       {children}
     </DataContext.Provider>

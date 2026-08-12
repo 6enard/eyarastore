@@ -10,6 +10,7 @@ import ProductPage from './pages/ProductPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import ReturnsPage from './pages/ReturnsPage';
+import AdminPage from './pages/AdminPage';
 
 function Pages() {
   const { route } = useRouter();
@@ -27,6 +28,8 @@ function Pages() {
       return <ContactPage />;
     case 'returns':
       return <ReturnsPage />;
+    case 'admin':
+      return <AdminPage />;
     default:
       return <HomePage />;
   }

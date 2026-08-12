@@ -47,10 +47,10 @@ export default function ProductPage({ slug }: { slug: string }) {
   }
 
   const hasDiscount = product.compare_at_price && product.compare_at_price > product.price;
-  const galleryImages = [product.image_url, ...(product.gallery || [])];
+  const galleryImages = [product.image_url || '', ...(product.gallery || [])];
 
   const handleAddToCart = () => {
-    addItem(product, quantity);
+    addItem(product as any, quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -99,7 +99,7 @@ export default function ProductPage({ slug }: { slug: string }) {
           <div>
             <div className="aspect-[4/5] overflow-hidden bg-cream-100 mb-4">
               <img
-                src={galleryImages[activeImage]}
+                src={galleryImages[activeImage] || ''}
                 alt={product.name}
                 className="w-full h-full object-cover animate-fade-in"
                 key={activeImage}
@@ -117,7 +117,7 @@ export default function ProductPage({ slug }: { slug: string }) {
                         : 'opacity-60 hover:opacity-100'
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={img || ''} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -159,7 +159,7 @@ export default function ProductPage({ slug }: { slug: string }) {
             </div>
 
             <p className="text-ink-600 leading-relaxed mb-8">
-              {product.description}
+              {product.description || ''}
             </p>
 
             {/* Stock status */}

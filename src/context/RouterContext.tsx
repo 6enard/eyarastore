@@ -6,7 +6,8 @@ type Route =
   | { name: 'product'; slug: string }
   | { name: 'about' }
   | { name: 'contact' }
-  | { name: 'returns' };
+  | { name: 'returns' }
+  | { name: 'admin' };
 
 interface RouterValue {
   route: Route;
@@ -31,6 +32,7 @@ function parsePath(path: string): Route {
   if (parts[0] === 'about') return { name: 'about' };
   if (parts[0] === 'contact') return { name: 'contact' };
   if (parts[0] === 'returns') return { name: 'returns' };
+  if (parts[0] === 'admin') return { name: 'admin' };
   return { name: 'home' };
 }
 
@@ -45,6 +47,7 @@ function routeToPath(route: Route): string {
     case 'about': return '/about';
     case 'contact': return '/contact';
     case 'returns': return '/returns';
+    case 'admin': return '/admin';
   }
 }
 

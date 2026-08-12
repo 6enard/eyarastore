@@ -27,7 +27,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
     >
       <div className="relative overflow-hidden bg-cream-100 aspect-[4/5] mb-4">
         <img
-          src={product.image_url}
+          src={product.image_url || ''}
           alt={product.name}
           loading="lazy"
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
@@ -52,7 +52,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (product.in_stock) addItem(product);
+              if (product.in_stock) addItem(product as any);
             }}
             disabled={!product.in_stock}
             className="flex-1 flex items-center justify-center gap-2 bg-ink-700/95 text-cream-100 py-3 text-xs font-medium tracking-widest uppercase backdrop-blur-sm transition-colors hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed"
