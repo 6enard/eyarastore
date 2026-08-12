@@ -1,21 +1,11 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ||
+  'https://dsydyqinmlmuqanpgrpx.supabase.co';
 
-let client: SupabaseClient | null = null;
+const SUPABASE_ANON_KEY =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzeWR5cWlubWxtdXFhbnBncnB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NTM3NDAsImV4cCI6MjEwMjEyOTc0MH0.Mq48soNiA9HquX8vnzXqGDJ-Gyee9eKgPzCcoeK33wQ';
 
-export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    if (!client) {
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error(
-          'Missing Supabase environment variables. Ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your .env file.'
-        );
-      }
-      client = createClient(supabaseUrl, supabaseAnonKey);
-    }
-    const value = (client as unknown as Record<string | symbol, unknown>)[prop];
-    return typeof value === 'function' ? value.bind(client) : value;
-  },
-});
+export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
