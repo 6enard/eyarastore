@@ -1,10 +1,12 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import type { Product, Category } from '../hooks/useData';
+import type { Product, Category, Order, OrderItem } from '../hooks/useData';
 
 interface DataContextValue {
   products: Product[];
   categories: Category[];
+  orders: Order[];
+  orderItems: OrderItem[];
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -15,6 +17,8 @@ const DataContext = createContext<DataContextValue | undefined>(undefined);
 export function DataProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,16 +26,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const [productsRes, categoriesRes] = await Promise.all([
+      const [productsRes, categoriesRes, ordersRes, orderItemsRes] = await Promise.all([
         supabase.from('products').select('*').order('created_at', { ascending: false }),
         supabase.from('categories').select('*').order('sort_order', { ascending: true }),
+        supabase.from('orders').select('*').order('created_at', { ascending: false }),
+        supabase.from('order_items').select('*').order('created_at', { ascending: false }),
       ]);
 
       if (productsRes.error) throw productsRes.error;
       if (categoriesRes.error) throw categoriesRes.error;
+      if (ordersRes.error) throw ordersRes.error;
+      if (orderItemsRes.error) throw orderItemsRes.error;
 
       setProducts((productsRes.data || []) as Product[]);
       setCategories((categoriesRes.data || []) as Category[]);
+      setOrders((ordersRes.data || []) as Order[]);
+      setOrderItems((orderItemsRes.data || []) as OrderItem[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
@@ -45,7 +55,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   return (
     <DataContext.Provider
-      value={{ products, categories, loading, error, refetch: loadData }}
+      value={{ products, categories, orders, orderItems, loading, error, refetch: loadData }}
     >
       {children}
     </DataContext.Provider>

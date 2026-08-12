@@ -34,6 +34,37 @@ export interface Category {
   created_at: string;
 }
 
+export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string | null;
+  product_name: string;
+  product_image: string | null;
+  price: number;
+  quantity: number;
+  line_total: number;
+  created_at: string;
+}
+
+export interface Order {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
+  shipping_address: string | null;
+  city: string | null;
+  status: OrderStatus;
+  subtotal: number;
+  shipping_cost: number;
+  total: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type ProductWithCategory = Product & {
   category?: Category | null;
 };
