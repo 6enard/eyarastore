@@ -5,7 +5,8 @@ type Route =
   | { name: 'shop'; demographic?: string; productType?: string }
   | { name: 'product'; slug: string }
   | { name: 'about' }
-  | { name: 'contact' };
+  | { name: 'contact' }
+  | { name: 'returns' };
 
 interface RouterValue {
   route: Route;
@@ -29,6 +30,7 @@ function parsePath(path: string): Route {
   }
   if (parts[0] === 'about') return { name: 'about' };
   if (parts[0] === 'contact') return { name: 'contact' };
+  if (parts[0] === 'returns') return { name: 'returns' };
   return { name: 'home' };
 }
 
@@ -42,6 +44,7 @@ function routeToPath(route: Route): string {
     case 'product': return `/product/${route.slug}`;
     case 'about': return '/about';
     case 'contact': return '/contact';
+    case 'returns': return '/returns';
   }
 }
 

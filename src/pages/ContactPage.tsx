@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Phone, MapPin, Send, Check } from 'lucide-react';
+import { Mail, Phone, Send, Check, Wallet, CreditCard } from 'lucide-react';
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
@@ -15,9 +15,9 @@ export default function ContactPage() {
   };
 
   const contactInfo = [
-    { icon: Mail, label: 'Email', value: 'hello@eyarastore.com', href: 'mailto:hello@eyarastore.com' },
-    { icon: Phone, label: 'Phone', value: '+1 (555) 234-5678', href: 'tel:+15552345678' },
-    { icon: MapPin, label: 'Studio', value: '123 Maker Street, Portland, OR 97201', href: null },
+    { icon: Mail, label: 'Email', value: 'info@eyarastore.co.ke', href: 'mailto:info@eyarastore.co.ke' },
+    { icon: Phone, label: 'Phone', value: '+254 700 679873', href: 'tel:+254700679873' },
+    { icon: Phone, label: 'Phone', value: '+254 755 841628', href: 'tel:+254755841628' },
   ];
 
   return (
@@ -58,11 +58,23 @@ export default function ContactPage() {
               ))}
             </div>
 
+            {/* Payment details */}
             <div className="mt-12 p-8 bg-cream-100 border border-sage-200">
-              <h3 className="font-serif text-lg text-ink-700 font-medium mb-2">Customer Support Hours</h3>
-              <p className="text-sm text-ink-600 mb-1">Monday — Friday: 9am to 6pm PST</p>
-              <p className="text-sm text-ink-600 mb-1">Saturday: 10am to 4pm PST</p>
-              <p className="text-sm text-ink-600">Sunday: Closed</p>
+              <div className="flex items-center gap-2 mb-4">
+                <Wallet size={18} className="text-bronze-500" strokeWidth={1.5} />
+                <h3 className="font-serif text-lg text-ink-700 font-medium">Payment Details</h3>
+              </div>
+              <div className="space-y-2 text-sm text-ink-600">
+                <p><span className="text-ink-500">Paybill No:</span> 600100</p>
+                <p><span className="text-ink-500">Account No:</span> 00107533B</p>
+              </div>
+              <div className="mt-4 pt-4 border-t border-sage-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCard size={16} className="text-bronze-500" strokeWidth={1.5} />
+                  <p className="text-xs tracking-widest uppercase text-sage-500">Accepted Methods</p>
+                </div>
+                <p className="text-sm text-ink-600">M-Pesa & Paybill</p>
+              </div>
             </div>
           </div>
 

@@ -9,6 +9,7 @@ import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import ReturnsPage from './pages/ReturnsPage';
 
 function Pages() {
   const { route } = useRouter();
@@ -24,6 +25,8 @@ function Pages() {
       return <AboutPage />;
     case 'contact':
       return <ContactPage />;
+    case 'returns':
+      return <ReturnsPage />;
     default:
       return <HomePage />;
   }

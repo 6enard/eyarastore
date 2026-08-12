@@ -69,7 +69,7 @@ export default function Footer() {
               Eyara<span className="text-bronze-400">store</span>
             </button>
             <p className="text-cream-200/60 text-sm leading-relaxed max-w-xs">
-              Premium clothing and footwear for men and women. Quality you can trust.
+              Wear the Vibe, Own the Street. Stylish, affordable fashion for every age, every vibe, every day.
             </p>
           </div>
 
@@ -94,8 +94,8 @@ export default function Footer() {
             <ul className="space-y-3">
               <li><button onClick={() => navigate('/about')} className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors">About Us</button></li>
               <li><button onClick={() => navigate('/contact')} className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors">Contact</button></li>
-              <li><button className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors">Shipping & Returns</button></li>
-              <li><button className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors">Privacy Policy</button></li>
+              <li><button onClick={() => navigate('/returns')} className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors">Returns &amp; Refunds</button></li>
+              <li><button onClick={() => navigate('/contact')} className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors">Contact</button></li>
             </ul>
           </div>
 
@@ -114,8 +114,8 @@ export default function Footer() {
             </div>
             <div className="mt-5 flex items-center gap-2 text-sm text-cream-200/70">
               <Mail size={14} />
-              <a href="mailto:hello@eyarastore.com" className="hover:text-bronze-400 transition-colors">
-                hello@eyarastore.com
+              <a href="mailto:info@eyarastore.co.ke" className="hover:text-bronze-400 transition-colors">
+                info@eyarastore.co.ke
               </a>
             </div>
           </div>
@@ -129,7 +129,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Eyarastore. All rights reserved.
           </p>
           <p className="text-xs text-cream-200/50 tracking-wide">
-            Quality fashion for men and women.
+            Wear the Vibe, Own the Street.
           </p>
         </div>
       </div>

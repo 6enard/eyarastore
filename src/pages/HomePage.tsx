@@ -15,7 +15,7 @@ export default function HomePage() {
 
   const features = [
     { icon: Truck, title: 'Free Shipping', desc: 'On all orders over KES 10,000' },
-    { icon: RefreshCw, title: 'Easy Returns', desc: '30-day return policy' },
+    { icon: RefreshCw, title: '48h Exchanges', desc: 'Size & color exchanges' },
     { icon: Shield, title: 'Secure Payment', desc: 'Encrypted checkout' },
     { icon: Headphones, title: '24/7 Support', desc: 'Dedicated customer care' },
   ];
@@ -39,11 +39,11 @@ export default function HomePage() {
               New Collection — 2026
             </p>
             <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl text-cream-100 font-light leading-[1.05] mb-6 animate-fade-up opacity-0" style={{ animationDelay: '350ms' }}>
-              Timeless style,<br />
-              <span className="italic text-cream-200">for him and her</span>
+              Wear the Vibe,<br />
+              <span className="italic text-cream-200">Own the Street</span>
             </h1>
             <p className="text-cream-200/80 text-lg leading-relaxed mb-8 max-w-md animate-fade-up opacity-0" style={{ animationDelay: '500ms' }}>
-              Discover premium clothing and footwear for men and women. Crafted with care, designed to last.
+              Stylish, affordable fashion for every age, every vibe, every day. Born on the streets, styled for you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 animate-fade-up opacity-0" style={{ animationDelay: '650ms' }}>
               <button

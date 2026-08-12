@@ -45,6 +45,7 @@ export default function Header() {
   const navLinks = [
     { label: 'Home', path: '/' },
     { label: 'About', path: '/about' },
+    { label: 'Returns', path: '/returns' },
     { label: 'Contact', path: '/contact' },
   ];
 
@@ -65,6 +66,7 @@ export default function Header() {
       }
     }
     if (path === '/about') return route.name === 'about';
+    if (path === '/returns') return route.name === 'returns';
     if (path === '/contact') return route.name === 'contact';
     return false;
   };
