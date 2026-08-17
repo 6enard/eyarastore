@@ -1,59 +1,66 @@
 import { useState, useMemo } from 'react';
-import { SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { SlidersHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
 import { useProducts } from '../hooks/useData';
+import { useData } from '../context/DataContext';
 import { useRouter } from '../context/RouterContext';
 import ProductCard from '../components/ProductCard';
 
 type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'rating';
 
-const demographics = [
-  { slug: 'men', name: 'Men' },
-  { slug: 'women', name: 'Women' },
-];
-
-const productTypes = [
-  { slug: 'clothes', name: 'Clothes' },
-  { slug: 'shoes', name: 'Shoes' },
-];
-
-export default function ShopPage({ demographic, productType }: { demographic?: string; productType?: string }) {
+export default function ShopPage({ categorySlug, subSlug }: { categorySlug?: string; subSlug?: string }) {
   const { navigate } = useRouter();
-  const { products, loading } = useProducts({ demographic, productType });
+  const { categories } = useData();
+
+  // Resolve the active category/sub from slugs
+  const mainCategories = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
+  const activeMain = useMemo(
+    () => mainCategories.find((c) => c.slug === categorySlug) || null,
+    [mainCategories, categorySlug],
+  );
+  const activeSub = useMemo(() => {
+    if (!activeMain || !subSlug) return null;
+    return categories.find((c) => c.parent_id === activeMain.id && c.slug === subSlug) || null;
+  }, [categories, activeMain, subSlug]);
+
+  // When a main category is selected, also include products in its sub-categories.
+  const mainAndSubIds = useMemo(() => {
+    if (!activeMain) return [];
+    const ids = [activeMain.id];
+    categories.forEach((c) => {
+      if (c.parent_id === activeMain.id) ids.push(c.id);
+    });
+    return ids;
+  }, [activeMain, categories]);
+
+  const { products, loading } = useProducts(
+    activeSub ? { categoryId: activeSub.id } : activeMain ? {} : {},
+  );
+
   const [sort, setSort] = useState<SortOption>('newest');
   const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 20000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [filterDemographic, setFilterDemographic] = useState<string | null>(null);
-  const [filterProductType, setFilterProductType] = useState<string | null>(null);
 
-  const activeDemographic = demographics.find((d) => d.slug === demographic);
-  const activeProductType = productTypes.find((p) => p.slug === productType);
+  // All products scoped to this view (main + its subs when only main is selected)
+  const scopedProducts = useMemo(() => {
+    if (activeSub) return products.filter((p) => p.category_id === activeSub.id);
+    if (activeMain) return products.filter((p) => mainAndSubIds.includes(p.category_id || ''));
+    return products;
+  }, [products, activeSub, activeMain, mainAndSubIds]);
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    products.forEach((p) => p.tags?.forEach((t) => tags.add(t)));
+    scopedProducts.forEach((p) => p.tags?.forEach((t) => tags.add(t)));
     return Array.from(tags).sort();
-  }, [products]);
+  }, [scopedProducts]);
 
   const filtered = useMemo(() => {
-    let result = [...products];
-
-    result = result.filter(
-      (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
+    let result = scopedProducts.filter(
+      (p) => p.price >= priceRange[0] && p.price <= priceRange[1],
     );
 
     if (selectedTags.length > 0) {
-      result = result.filter((p) =>
-        selectedTags.some((tag) => p.tags?.includes(tag))
-      );
-    }
-
-    if (filterDemographic) {
-      result = result.filter((p) => p.demographic === filterDemographic);
-    }
-
-    if (filterProductType) {
-      result = result.filter((p) => p.product_type === filterProductType);
+      result = result.filter((p) => selectedTags.some((tag) => p.tags?.includes(tag)));
     }
 
     switch (sort) {
@@ -71,50 +78,64 @@ export default function ShopPage({ demographic, productType }: { demographic?: s
     }
 
     return result;
-  }, [products, priceRange, selectedTags, filterDemographic, filterProductType, sort]);
+  }, [scopedProducts, priceRange, selectedTags, sort]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     );
   };
 
   const clearFilters = () => {
-    setPriceRange([0, 20000]);
+    setPriceRange([0, 50000]);
     setSelectedTags([]);
-    setFilterDemographic(null);
-    setFilterProductType(null);
   };
 
-  const hasActiveFilters =
-    priceRange[0] !== 0 ||
-    priceRange[1] !== 20000 ||
-    selectedTags.length > 0 ||
-    filterDemographic !== null ||
-    filterProductType !== null;
+  const hasActiveFilters = priceRange[0] !== 0 || priceRange[1] !== 50000 || selectedTags.length > 0;
+
+  const subsOfActive = activeMain ? categories.filter((c) => c.parent_id === activeMain.id) : [];
 
   const getPageTitle = () => {
-    if (activeDemographic && activeProductType) {
-      return `${activeDemographic.name}'s ${activeProductType.name}`;
-    }
-    if (activeDemographic) {
-      return activeDemographic.name;
-    }
-    if (activeProductType) {
-      return `${activeProductType.name}`;
-    }
+    if (activeSub) return activeSub.name;
+    if (activeMain) return activeMain.name;
     return 'All Products';
   };
 
   const getPageEyebrow = () => {
-    if (activeDemographic) {
-      return `Shop ${activeDemographic.name}`;
-    }
+    if (activeMain) return `Shop ${activeMain.name}`;
     return 'The Collection';
   };
 
   return (
     <div>
+      {/* Breadcrumb */}
+      <div className="border-b border-sage-200 bg-cream-50">
+        <div className="container-lux py-4">
+          <nav className="flex items-center gap-2 text-xs tracking-wide text-sage-500">
+            <button onClick={() => navigate('/')} className="hover:text-bronze-500 transition-colors">Home</button>
+            <ChevronRight size={12} />
+            <button onClick={() => navigate('/shop')} className="hover:text-bronze-500 transition-colors">Shop</button>
+            {activeMain && (
+              <>
+                <ChevronRight size={12} />
+                <button
+                  onClick={() => navigate(`/shop/${activeMain.slug}`)}
+                  className="hover:text-bronze-500 transition-colors"
+                >
+                  {activeMain.name}
+                </button>
+              </>
+            )}
+            {activeSub && (
+              <>
+                <ChevronRight size={12} />
+                <span className="text-ink-600 truncate">{activeSub.name}</span>
+              </>
+            )}
+          </nav>
+        </div>
+      </div>
+
       {/* Page header */}
       <div className="bg-cream-100 border-b border-sage-200">
         <div className="container-lux py-12 lg:py-16 text-center">
@@ -122,76 +143,78 @@ export default function ShopPage({ demographic, productType }: { demographic?: s
           <h1 className="font-serif text-4xl sm:text-5xl text-ink-700 font-light">
             {getPageTitle()}
           </h1>
-          {activeDemographic?.slug && (
+          {activeMain?.description && (
             <p className="text-ink-500 mt-4 max-w-xl mx-auto leading-relaxed">
-              Discover our curated selection of premium {activeProductType?.name.toLowerCase() || 'products'} for {activeDemographic.name.toLowerCase()}.
+              {activeMain.description}
             </p>
           )}
         </div>
       </div>
 
-      {/* Demographic pills */}
+      {/* Main category pills */}
       <div className="border-b border-sage-200">
         <div className="container-lux py-4">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => navigate('/shop')}
               className={`px-4 py-2 text-xs tracking-widest uppercase whitespace-nowrap transition-colors ${
-                !demographic
-                  ? 'bg-ink-700 text-cream-100'
-                  : 'text-ink-500 hover:text-bronze-500'
+                !categorySlug ? 'bg-ink-700 text-cream-100' : 'text-ink-500 hover:text-bronze-500'
               }`}
             >
               All
             </button>
-            {demographics.map((demo) => (
+            {mainCategories.map((cat) => (
               <button
-                key={demo.slug}
-                onClick={() => navigate(productType ? `/shop/${demo.slug}/${productType}` : `/shop/${demo.slug}`)}
+                key={cat.id}
+                onClick={() => navigate(`/shop/${cat.slug}`)}
                 className={`px-4 py-2 text-xs tracking-widest uppercase whitespace-nowrap transition-colors ${
-                  demographic === demo.slug
+                  categorySlug === cat.slug && !subSlug
                     ? 'bg-ink-700 text-cream-100'
-                    : 'text-ink-500 hover:text-bronze-500'
+                    : categorySlug === cat.slug
+                      ? 'text-bronze-500 border border-bronze-400'
+                      : 'text-ink-500 hover:text-bronze-500'
                 }`}
               >
-                {demo.name}
+                {cat.name}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Product type secondary nav */}
-      <div className="border-b border-sage-100 bg-cream-50">
-        <div className="container-lux py-3">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <span className="text-xs text-sage-500 uppercase tracking-widest mr-2">Type:</span>
-            <button
-              onClick={() => navigate(demographic ? `/shop/${demographic}` : '/shop')}
-              className={`px-3 py-1.5 text-xs tracking-wide whitespace-nowrap transition-colors ${
-                !productType
-                  ? 'bg-bronze-500 text-cream-50'
-                  : 'text-ink-500 hover:text-bronze-500 border border-sage-200'
-              }`}
-            >
-              All
-            </button>
-            {productTypes.map((type) => (
+      {/* Sub-category secondary nav (only when a main category is selected) */}
+      {activeMain && subsOfActive.length > 0 && (
+        <div className="border-b border-sage-100 bg-cream-50">
+          <div className="container-lux py-3">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+              <span className="text-xs text-sage-500 uppercase tracking-widest mr-2">Sub:</span>
               <button
-                key={type.slug}
-                onClick={() => navigate(demographic ? `/shop/${demographic}/${type.slug}` : `/shop/${type.slug}`)}
+                onClick={() => navigate(`/shop/${activeMain.slug}`)}
                 className={`px-3 py-1.5 text-xs tracking-wide whitespace-nowrap transition-colors ${
-                  productType === type.slug
+                  !subSlug
                     ? 'bg-bronze-500 text-cream-50'
                     : 'text-ink-500 hover:text-bronze-500 border border-sage-200'
                 }`}
               >
-                {type.name}
+                All {activeMain.name}
               </button>
-            ))}
+              {subsOfActive.map((sub) => (
+                <button
+                  key={sub.id}
+                  onClick={() => navigate(`/shop/${activeMain.slug}/${sub.slug}`)}
+                  className={`px-3 py-1.5 text-xs tracking-wide whitespace-nowrap transition-colors ${
+                    subSlug === sub.slug
+                      ? 'bg-bronze-500 text-cream-50'
+                      : 'text-ink-500 hover:text-bronze-500 border border-sage-200'
+                  }`}
+                >
+                  {sub.name}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="container-lux py-10">
         {/* Toolbar */}
@@ -202,9 +225,7 @@ export default function ShopPage({ demographic, productType }: { demographic?: s
           >
             <SlidersHorizontal size={16} />
             Filters
-            {hasActiveFilters && (
-              <span className="w-1.5 h-1.5 rounded-full bg-bronze-500" />
-            )}
+            {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-bronze-500" />}
           </button>
 
           <div className="flex items-center gap-3">
@@ -242,8 +263,7 @@ export default function ShopPage({ demographic, productType }: { demographic?: s
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Price range */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               <div>
                 <label className="label-lux">Price Range</label>
                 <div className="flex items-center gap-3">
@@ -265,51 +285,6 @@ export default function ShopPage({ demographic, productType }: { demographic?: s
                 </div>
               </div>
 
-              {/* Demographic filter (only show on all products page) */}
-              {!demographic && (
-                <div>
-                  <label className="label-lux">Demographic</label>
-                  <div className="flex flex-wrap gap-2">
-                    {demographics.map((demo) => (
-                      <button
-                        key={demo.slug}
-                        onClick={() => setFilterDemographic(filterDemographic === demo.slug ? null : demo.slug)}
-                        className={`px-3 py-1.5 text-xs tracking-wide capitalize transition-colors ${
-                          filterDemographic === demo.slug
-                            ? 'bg-ink-700 text-cream-100'
-                            : 'bg-cream-50 text-ink-500 border border-sage-300 hover:border-bronze-400'
-                        }`}
-                      >
-                        {demo.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Product type filter (only show on all products page) */}
-              {!productType && (
-                <div>
-                  <label className="label-lux">Product Type</label>
-                  <div className="flex flex-wrap gap-2">
-                    {productTypes.map((type) => (
-                      <button
-                        key={type.slug}
-                        onClick={() => setFilterProductType(filterProductType === type.slug ? null : type.slug)}
-                        className={`px-3 py-1.5 text-xs tracking-wide capitalize transition-colors ${
-                          filterProductType === type.slug
-                            ? 'bg-ink-700 text-cream-100'
-                            : 'bg-cream-50 text-ink-500 border border-sage-300 hover:border-bronze-400'
-                        }`}
-                      >
-                        {type.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Tags */}
               {allTags.length > 0 && (
                 <div>
                   <label className="label-lux">Tags</label>
@@ -340,8 +315,7 @@ export default function ShopPage({ demographic, productType }: { demographic?: s
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i}>
                 <div className="aspect-[4/5] skeleton mb-4" />
-                <div className="h-4 w-20 skeleton mb-2" />
-                <div className="h-5 w-32 skeleton mb-2" />
+                <div className="h-4 w-32 skeleton mb-2" />
                 <div className="h-4 w-16 skeleton" />
               </div>
             ))}
@@ -349,7 +323,11 @@ export default function ShopPage({ demographic, productType }: { demographic?: s
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="font-serif text-2xl text-ink-700 mb-2">No products found</p>
-            <p className="text-sm text-sage-500 mb-6">Try adjusting your filters.</p>
+            <p className="text-sm text-sage-500 mb-6">
+              {activeMain
+                ? 'There are no products in this category yet.'
+                : 'Try adjusting your filters.'}
+            </p>
             {hasActiveFilters && (
               <button onClick={clearFilters} className="btn-outline">
                 Clear Filters

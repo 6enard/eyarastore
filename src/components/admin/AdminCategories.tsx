@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
-  Plus, Pencil, Trash2, ChevronLeft, Save, AlertTriangle, FolderTree,
+  Plus, Pencil, Trash2, ChevronLeft, Save, AlertTriangle, FolderTree, ArrowRight,
 } from 'lucide-react';
 import { ImageUpload } from '../ImageUpload';
 import { supabase } from '../../lib/supabase';
@@ -13,6 +13,9 @@ export function AdminCategories({ products }: { products: ReturnType<typeof useD
   const [mode, setMode] = useState<'list' | 'edit' | 'create'>('list');
   const [editingItem, setEditingItem] = useState<Category | null>(null);
 
+  const mainCategories = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
+  const subsOf = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
+
   const handleSave = async () => {
     await refetch();
     setMode('list');
@@ -21,8 +24,12 @@ export function AdminCategories({ products }: { products: ReturnType<typeof useD
 
   const handleDelete = async (id: string, name: string) => {
     const productCount = products.filter((p) => p.category_id === id).length;
-    const msg = productCount > 0
-      ? `"${name}" has ${productCount} products. Deleting it will unlink those products. Continue?`
+    const subCount = subsOf(id).length;
+    const parts: string[] = [];
+    if (productCount > 0) parts.push(`${productCount} products`);
+    if (subCount > 0) parts.push(`${subCount} sub-categories`);
+    const msg = parts.length > 0
+      ? `"${name}" has ${parts.join(' and ')}. Deleting it will unlink them. Continue?`
       : `Delete "${name}"? This cannot be undone.`;
     if (!confirm(msg)) return;
     const { error } = await supabase.from('categories').delete().eq('id', id);
@@ -37,6 +44,7 @@ export function AdminCategories({ products }: { products: ReturnType<typeof useD
     return (
       <CategoryForm
         category={editingItem}
+        categories={categories}
         isEdit={mode === 'edit'}
         onSave={handleSave}
         onCancel={() => { setMode('list'); setEditingItem(null); }}
@@ -49,7 +57,7 @@ export function AdminCategories({ products }: { products: ReturnType<typeof useD
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h2 className="font-serif text-2xl text-ink-700 font-light mb-1">Categories</h2>
-          <p className="text-sm text-sage-500">{categories.length} categories</p>
+          <p className="text-sm text-sage-500">{categories.length} categories ({mainCategories.length} main, {categories.length - mainCategories.length} sub)</p>
         </div>
         <button
           onClick={() => { setMode('create'); setEditingItem(null); }}
@@ -65,49 +73,107 @@ export function AdminCategories({ products }: { products: ReturnType<typeof useD
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ink-700" />
         </div>
       ) : categories.length === 0 ? (
-        <EmptyState icon={FolderTree} message="No categories yet. Add your first category." />
+        <EmptyState icon={FolderTree} message="No categories yet. Add your first main category, then create sub-categories under it." />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((c) => {
-            const productCount = products.filter((p) => p.category_id === c.id).length;
+        <div className="space-y-6">
+          {mainCategories.map((main) => {
+            const productCount = products.filter((p) => p.category_id === main.id).length;
+            const children = subsOf(main.id);
             return (
-              <div key={c.id} className="bg-white border border-sage-200 p-5 transition-all hover:shadow-md">
-                <div className="flex items-start justify-between mb-3">
+              <div key={main.id} className="bg-white border border-sage-200">
+                {/* Main category header */}
+                <div className="flex items-start justify-between p-5 border-b border-sage-100">
                   <div className="flex items-center gap-3">
                     <div className="w-14 h-14 bg-cream-100 overflow-hidden flex-shrink-0">
-                      {c.image_url && <img src={c.image_url} alt="" className="w-full h-full object-cover" />}
+                      {main.image_url && <img src={main.image_url} alt="" className="w-full h-full object-cover" />}
                     </div>
                     <div>
-                      <h3 className="font-medium text-ink-700">{c.name}</h3>
-                      <p className="text-xs text-sage-400">{c.slug}</p>
+                      <h3 className="font-medium text-ink-700">{main.name}</h3>
+                      <p className="text-xs text-sage-400">{main.slug}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] px-2 py-0.5 bg-bronze-100 text-bronze-700 uppercase tracking-wide">Main</span>
+                        <span className="text-[10px] px-2 py-0.5 bg-cream-100 text-ink-600">{productCount} {productCount === 1 ? 'product' : 'products'}</span>
+                        <span className="text-[10px] px-2 py-0.5 bg-cream-100 text-ink-600">{children.length} sub</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setMode('create'); setEditingItem({ ...main, parent_id: main.id, id: '', name: '', slug: '', description: '', image_url: '', demographic: main.demographic, product_type: main.product_type, sort_order: 0, created_at: '' }); }}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs text-bronze-600 hover:text-bronze-700 transition-colors border border-bronze-300 hover:border-bronze-500"
+                      title="Add sub-category"
+                    >
+                      <Plus size={12} />
+                      Sub
+                    </button>
+                    <button
+                      onClick={() => { setMode('edit'); setEditingItem(main); }}
+                      className="p-2 text-ink-500 hover:text-bronze-500 transition-colors"
+                      title="Edit"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(main.id, main.name)}
+                      className="p-2 text-ink-500 hover:text-red-600 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
-                {c.description && <p className="text-sm text-sage-500 mb-3 line-clamp-2">{c.description}</p>}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-xs px-2 py-1 bg-cream-100 text-ink-600 capitalize">{c.demographic}</span>
-                  <span className="text-xs px-2 py-1 bg-cream-100 text-ink-600 capitalize">{c.product_type}</span>
-                  <span className="text-xs px-2 py-1 bg-bronze-100 text-bronze-700">{productCount} {productCount === 1 ? 'product' : 'products'}</span>
-                </div>
-                <div className="flex items-center gap-2 pt-3 border-t border-sage-100">
-                  <button
-                    onClick={() => { setMode('edit'); setEditingItem(c); }}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm text-ink-600 hover:text-bronze-500 transition-colors border border-sage-200 hover:border-bronze-400"
-                  >
-                    <Pencil size={14} />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(c.id, c.name)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm text-ink-600 hover:text-red-600 transition-colors border border-sage-200 hover:border-red-400"
-                  >
-                    <Trash2 size={14} />
-                    Delete
-                  </button>
-                </div>
+
+                {/* Sub categories */}
+                {children.length > 0 && (
+                  <div className="divide-y divide-sage-100">
+                    {children.map((sub) => {
+                      const subProductCount = products.filter((p) => p.category_id === sub.id).length;
+                      return (
+                        <div key={sub.id} className="flex items-center justify-between px-5 py-3 pl-10">
+                          <div className="flex items-center gap-3">
+                            <ArrowRight size={14} className="text-sage-400" />
+                            <div className="w-10 h-10 bg-cream-100 overflow-hidden flex-shrink-0">
+                              {sub.image_url && <img src={sub.image_url} alt="" className="w-full h-full object-cover" />}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-ink-700">{sub.name}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] text-sage-400">{sub.slug}</span>
+                                <span className="text-[10px] px-2 py-0.5 bg-cream-100 text-ink-600">{subProductCount} {subProductCount === 1 ? 'product' : 'products'}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => { setMode('edit'); setEditingItem(sub); }}
+                              className="p-1.5 text-ink-500 hover:text-bronze-500 transition-colors"
+                              title="Edit"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(sub.id, sub.name)}
+                              className="p-1.5 text-ink-500 hover:text-red-600 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
+
+          {/* Orphan categories (shouldn't happen, but display defensively) */}
+          {categories.filter((c) => c.parent_id && !mainCategories.some((m) => m.id === c.parent_id)).map((orphan) => (
+            <div key={orphan.id} className="bg-white border border-sage-200 p-5">
+              <p className="text-sm text-amber-600">{orphan.name} — orphaned sub-category (parent deleted)</p>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -116,23 +182,30 @@ export function AdminCategories({ products }: { products: ReturnType<typeof useD
 
 // ─── Category Form ───
 
-function CategoryForm({ category, isEdit, onSave, onCancel }: {
+function CategoryForm({ category, categories, isEdit, onSave, onCancel }: {
   category: Category | null;
+  categories: Category[];
   isEdit: boolean;
   onSave: () => void;
   onCancel: () => void;
 }) {
+  const mainCategories = categories.filter((c) => !c.parent_id);
+  // If category has a parent_id but no id, it's the "add sub" placeholder.
+  const isSubCreate = !isEdit && category?.parent_id && !category?.id;
   const [form, setForm] = useState({
     name: category?.name || '',
     slug: category?.slug || '',
     description: category?.description || '',
     image_url: category?.image_url || '',
-    demographic: category?.demographic || 'men',
-    product_type: category?.product_type || 'clothes',
+    parent_id: isSubCreate ? (category?.parent_id || '') : (category?.parent_id || ''),
+    demographic: category?.demographic || '',
+    product_type: category?.product_type || '',
     sort_order: category?.sort_order?.toString() || '0',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const isSub = Boolean(form.parent_id);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,18 +219,20 @@ function CategoryForm({ category, isEdit, onSave, onCancel }: {
       return;
     }
 
-    const data = {
+    const data: Record<string, unknown> = {
       name: form.name,
       slug,
       description: form.description || null,
       image_url: form.image_url || null,
-      demographic: form.demographic,
-      product_type: form.product_type,
+      parent_id: form.parent_id || null,
       sort_order: parseInt(form.sort_order) || 0,
     };
+    // demographic / product_type are optional for hierarchical categories.
+    data.demographic = form.demographic || null;
+    data.product_type = form.product_type || null;
 
     let result;
-    if (isEdit && category) {
+    if (isEdit && category?.id) {
       result = await supabase.from('categories').update(data).eq('id', category.id);
     } else {
       result = await supabase.from('categories').insert(data);
@@ -178,11 +253,29 @@ function CategoryForm({ category, isEdit, onSave, onCancel }: {
           <ChevronLeft size={20} />
         </button>
         <h2 className="font-serif text-2xl text-ink-700 font-light">
-          {isEdit ? 'Edit Category' : 'New Category'}
+          {isEdit ? 'Edit Category' : isSub ? 'New Sub-Category' : 'New Main Category'}
         </h2>
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-lg space-y-5">
+        <FormField label="Parent Category" >
+          <select
+            value={form.parent_id}
+            onChange={(e) => setForm({ ...form, parent_id: e.target.value })}
+            className="input-lux"
+          >
+            <option value="">None (Main Category)</option>
+            {mainCategories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <p className="text-xs text-sage-500 mt-1">
+            {isSub
+              ? 'This will be a sub-category shown under the selected parent.'
+              : 'Leave as "None" to create a top-level main category shown in the header navigation.'}
+          </p>
+        </FormField>
+
         <FormField label="Category Name" required>
           <input
             type="text"
@@ -222,23 +315,25 @@ function CategoryForm({ category, isEdit, onSave, onCancel }: {
         />
 
         <div className="grid grid-cols-2 gap-4">
-          <FormField label="Demographic">
+          <FormField label="Demographic (optional)">
             <select
               value={form.demographic}
-              onChange={(e) => setForm({ ...form, demographic: e.target.value as 'men' | 'women' | 'kids' })}
+              onChange={(e) => setForm({ ...form, demographic: e.target.value })}
               className="input-lux"
             >
+              <option value="">Any</option>
               <option value="men">Men</option>
               <option value="women">Women</option>
               <option value="kids">Kids</option>
             </select>
           </FormField>
-          <FormField label="Product Type">
+          <FormField label="Product Type (optional)">
             <select
               value={form.product_type}
-              onChange={(e) => setForm({ ...form, product_type: e.target.value as 'clothes' | 'shoes' })}
+              onChange={(e) => setForm({ ...form, product_type: e.target.value })}
               className="input-lux"
             >
+              <option value="">Any</option>
               <option value="clothes">Clothes</option>
               <option value="shoes">Shoes</option>
             </select>

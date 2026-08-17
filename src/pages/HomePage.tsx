@@ -1,17 +1,16 @@
 import { ArrowRight, Truck, Shield, RefreshCw, Headphones } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
 import { useProducts } from '../hooks/useData';
+import { useData } from '../context/DataContext';
 import ProductCard from '../components/ProductCard';
-
-const demographics = [
-  { slug: 'men', name: 'Men', image: 'https://cdn.dummyjson.com/product-images/mens-shirts/man-plaid-shirt/1.webp', description: "Premium men's fashion and footwear" },
-  { slug: 'women', name: 'Women', image: 'https://cdn.dummyjson.com/product-images/womens-dresses/black-women%27s-gown/1.webp', description: "Elegant women's clothing and shoes" },
-];
 
 export default function HomePage() {
   const { navigate } = useRouter();
-  const { products: menProducts } = useProducts({ demographic: 'men', limit: 4 });
-  const { products: womenProducts } = useProducts({ demographic: 'women', limit: 4 });
+  const { categories } = useData();
+  const { products: featuredProducts } = useProducts({ featuredOnly: true, limit: 8 });
+  const { products: newProducts } = useProducts({ limit: 8 });
+
+  const mainCategories = categories.filter((c) => !c.parent_id).slice(0, 4);
 
   const features = [
     { icon: Truck, title: 'Free Shipping', desc: 'On all orders over KES 10,000' },
@@ -38,14 +37,17 @@ export default function HomePage() {
             <p className="eyebrow text-cream-300 mb-5 animate-fade-up opacity-0" style={{ animationDelay: '200ms' }}>
               New Collection — 2026
             </p>
-            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl text-cream-100 font-light leading-[1.05] mb-6 animate-fade-up opacity-0" style={{ animationDelay: '350ms' }}>
+            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl text-cream-100 font-light leading-[1.05] mb-4 animate-fade-up opacity-0" style={{ animationDelay: '350ms' }}>
               Wear the Vibe,<br />
               <span className="italic text-cream-200">Own the Street</span>
             </h1>
-            <p className="text-cream-200/80 text-lg leading-relaxed mb-8 max-w-md animate-fade-up opacity-0" style={{ animationDelay: '500ms' }}>
-              Stylish, affordable fashion for every age, every vibe, every day. Born on the streets, styled for you.
+            <p className="text-bronze-300 text-sm tracking-[0.25em] uppercase mb-6 animate-fade-up opacity-0" style={{ animationDelay: '480ms' }}>
+              Eyarastore — Stylish, affordable fashion for every age, every vibe, every day.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 animate-fade-up opacity-0" style={{ animationDelay: '650ms' }}>
+            <p className="text-cream-200/80 text-lg leading-relaxed mb-8 max-w-md animate-fade-up opacity-0" style={{ animationDelay: '600ms' }}>
+              Born on the streets, styled for you. Explore curated categories and find your look.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 animate-fade-up opacity-0" style={{ animationDelay: '750ms' }}>
               <button
                 onClick={() => navigate('/shop')}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-cream-100 text-ink-700 font-medium tracking-widest text-sm uppercase transition-all duration-300 hover:bg-bronze-500 hover:text-cream-50"
@@ -88,87 +90,111 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Shop by demographic */}
+      {/* Shop by category */}
       <section className="py-20 lg:py-28">
         <div className="container-lux">
           <div className="text-center mb-12">
-            <p className="eyebrow mb-3">Shop For</p>
-            <h2 className="section-title">Men & Women</h2>
+            <p className="eyebrow mb-3">Browse</p>
+            <h2 className="section-title">Shop by Category</h2>
+            <p className="text-ink-500 mt-4 max-w-xl mx-auto">
+              Curated collections organized so you can find exactly what you're looking for.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
-            {demographics.map((demo, i) => (
-              <button
-                key={demo.slug}
-                onClick={() => navigate(`/shop/${demo.slug}`)}
-                className="group relative aspect-[3/4] overflow-hidden bg-ink-700 animate-fade-up opacity-0"
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                <img
-                  src={demo.image}
-                  alt={demo.name}
-                  className="w-full h-full object-cover opacity-70 transition-all duration-700 group-hover:opacity-50 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                  <h3 className="font-serif text-2xl text-cream-100 font-medium mb-2">{demo.name}</h3>
-                  <p className="text-sm text-cream-200/70 mb-3">{demo.description}</p>
-                  <span className="flex items-center gap-1.5 text-cream-200/80 text-xs tracking-widest uppercase opacity-0 -translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-                    Shop Now <ArrowRight size={12} />
-                  </span>
-                </div>
+          {mainCategories.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-sage-500 text-sm">No categories yet. Add categories in the admin panel to populate this section.</p>
+              <button onClick={() => navigate('/admin')} className="btn-outline mt-4">
+                Go to Admin
               </button>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {mainCategories.map((cat, i) => (
+                <button
+                  key={cat.id}
+                  onClick={() => navigate(`/shop/${cat.slug}`)}
+                  className="group relative aspect-[3/4] overflow-hidden bg-ink-700 animate-fade-up opacity-0"
+                  style={{ animationDelay: `${i * 100}ms`}}
+                >
+                  {cat.image_url ? (
+                    <img
+                      src={cat.image_url}
+                      alt={cat.name}
+                      className="w-full h-full object-cover opacity-70 transition-all duration-700 group-hover:opacity-50 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-ink-800">
+                      <span className="font-serif text-4xl text-cream-200/30">{cat.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+                    <h3 className="font-serif text-2xl text-cream-100 font-medium mb-2">{cat.name}</h3>
+                    {cat.description && (
+                      <p className="text-sm text-cream-200/70 mb-3 line-clamp-2">{cat.description}</p>
+                    )}
+                    <span className="flex items-center gap-1.5 text-cream-200/80 text-xs tracking-widest uppercase opacity-0 -translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
+                      Shop Now <ArrowRight size={12} />
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Men's Collection */}
-      <section className="py-16 lg:py-20 bg-cream-100">
-        <div className="container-lux">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
-            <div>
-              <p className="eyebrow mb-3">For Him</p>
-              <h2 className="section-title">Men's Collection</h2>
+      {/* Featured products */}
+      {featuredProducts.length > 0 && (
+        <section className="py-16 lg:py-20 bg-cream-100">
+          <div className="container-lux">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
+              <div>
+                <p className="eyebrow mb-3">Editor's Picks</p>
+                <h2 className="section-title">Featured Products</h2>
+              </div>
+              <button
+                onClick={() => navigate('/shop')}
+                className="inline-flex items-center gap-2 text-sm tracking-widest uppercase text-ink-600 hover:text-bronze-500 transition-colors group"
+              >
+                View All
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+              </button>
             </div>
-            <button
-              onClick={() => navigate('/shop/men')}
-              className="inline-flex items-center gap-2 text-sm tracking-widest uppercase text-ink-600 hover:text-bronze-500 transition-colors group"
-            >
-              View All Men's
-              <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-            </button>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
+              {featuredProducts.slice(0, 4).map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
-            {menProducts.slice(0, 4).map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Women's Collection */}
-      <section className="py-16 lg:py-20">
-        <div className="container-lux">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
-            <div>
-              <p className="eyebrow mb-3">For Her</p>
-              <h2 className="section-title">Women's Collection</h2>
+      {/* New arrivals */}
+      {newProducts.length > 0 && (
+        <section className="py-16 lg:py-20">
+          <div className="container-lux">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
+              <div>
+                <p className="eyebrow mb-3">Just In</p>
+                <h2 className="section-title">New Arrivals</h2>
+              </div>
+              <button
+                onClick={() => navigate('/shop')}
+                className="inline-flex items-center gap-2 text-sm tracking-widest uppercase text-ink-600 hover:text-bronze-500 transition-colors group"
+              >
+                View All
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+              </button>
             </div>
-            <button
-              onClick={() => navigate('/shop/women')}
-              className="inline-flex items-center gap-2 text-sm tracking-widest uppercase text-ink-600 hover:text-bronze-500 transition-colors group"
-            >
-              View All Women's
-              <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-            </button>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
+              {newProducts.slice(0, 4).map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
-            {womenProducts.slice(0, 4).map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Editorial banner */}
       <section className="py-20 lg:py-28 bg-cream-100">
@@ -201,23 +227,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section className="py-20 lg:py-28 bg-ink-700 text-cream-100">
-        <div className="container-lux">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="flex justify-center gap-1 mb-6">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <span key={s} className="text-bronze-400 text-2xl">★</span>
-              ))}
-            </div>
-            <blockquote className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light leading-relaxed italic mb-8 text-balance">
-              "The quality is exceptional. I found pieces for myself and my partner that we both love. The attention to detail is remarkable."
-            </blockquote>
-            <div>
-              <p className="font-medium text-cream-100">Sarah Mitchell</p>
-              <p className="text-sm text-cream-200/60 mt-1">Verified Customer</p>
-            </div>
-          </div>
+      {/* CTA band */}
+      <section className="py-16 lg:py-20 bg-ink-700 text-cream-100">
+        <div className="container-lux text-center max-w-3xl mx-auto">
+          <p className="eyebrow text-cream-300 mb-4">Wear the Vibe, Own the Street</p>
+          <p className="font-serif text-2xl sm:text-3xl font-light leading-relaxed text-balance mb-8">
+            We are more than just an online boutique; we are a community of individuals who refuse to blend into the background. Find your look. Wear the vibe, own the street.
+          </p>
+          <button
+            onClick={() => navigate('/shop')}
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-bronze-500 text-cream-50 font-medium tracking-widest text-sm uppercase transition-all duration-300 hover:bg-bronze-600"
+          >
+            Shop the Collection
+            <ArrowRight size={16} />
+          </button>
         </div>
       </section>
     </div>

@@ -1,19 +1,14 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
-import type { TransformedProduct } from '../lib/dummyjson';
-
-export interface CartItem {
-  product: TransformedProduct;
-  quantity: number;
-}
+import type { CartItem, CartItemProduct, CartItemVariant } from '../types/cart';
 
 interface CartContextValue {
   items: CartItem[];
   isOpen: boolean;
   itemCount: number;
   subtotal: number;
-  addItem: (product: TransformedProduct, quantity?: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addItem: (product: CartItemProduct, variant: CartItemVariant | null, quantity?: number) => void;
+  removeItem: (key: string) => void;
+  updateQuantity: (key: string, quantity: number) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
@@ -21,7 +16,12 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'eyarastore-cart';
+const STORAGE_KEY = 'eyarastore-cart-v2';
+
+/** Unique cart line key — product + variant combo. */
+export function cartItemKey(productId: string, variantId: string | null): string {
+  return variantId ? `${productId}::${variantId}` : productId;
+}
 
 function loadCart(): CartItem[] {
   try {
@@ -47,34 +47,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items]);
 
-  const addItem = useCallback((product: TransformedProduct, quantity = 1) => {
-    setItems((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      }
-      return [...prev, { product, quantity }];
-    });
-    setIsOpen(true);
+  const addItem = useCallback(
+    (product: CartItemProduct, variant: CartItemVariant | null, quantity = 1) => {
+      const key = cartItemKey(product.id, variant?.id ?? null);
+      setItems((prev) => {
+        const existing = prev.find((item) => cartItemKey(item.product.id, item.variant?.id ?? null) === key);
+        if (existing) {
+          return prev.map((item) =>
+            cartItemKey(item.product.id, item.variant?.id ?? null) === key
+              ? { ...item, quantity: item.quantity + quantity }
+              : item,
+          );
+        }
+        return [...prev, { product, variant, quantity }];
+      });
+      setIsOpen(true);
+    },
+    [],
+  );
+
+  const removeItem = useCallback((key: string) => {
+    setItems((prev) =>
+      prev.filter((item) => cartItemKey(item.product.id, item.variant?.id ?? null) !== key),
+    );
   }, []);
 
-  const removeItem = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((item) => item.product.id !== productId));
-  }, []);
-
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+  const updateQuantity = useCallback((key: string, quantity: number) => {
     if (quantity <= 0) {
-      setItems((prev) => prev.filter((item) => item.product.id !== productId));
+      setItems((prev) =>
+        prev.filter((item) => cartItemKey(item.product.id, item.variant?.id ?? null) !== key),
+      );
       return;
     }
     setItems((prev) =>
       prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
-      )
+        cartItemKey(item.product.id, item.variant?.id ?? null) === key
+          ? { ...item, quantity }
+          : item,
+      ),
     );
   }, []);
 
@@ -83,10 +93,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const closeCart = useCallback(() => setIsOpen(false), []);
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0
-  );
+  const subtotal = items.reduce((sum, item) => {
+    const unit = item.variant ? item.variant.price : item.product.price;
+    return sum + unit * item.quantity;
+  }, 0);
 
   return (
     <CartContext.Provider

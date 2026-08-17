@@ -1,25 +1,21 @@
 import { useEffect, useState, useRef } from 'react';
-import { ShoppingBag, Menu, X, Search, ChevronDown } from 'lucide-react';
+import { ShoppingBag, Menu, X, ChevronDown } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
-
-const demographics = [
-  { slug: 'men', name: 'Men' },
-  { slug: 'women', name: 'Women' },
-];
-
-const productTypes = [
-  { slug: 'clothes', name: 'Clothes' },
-  { slug: 'shoes', name: 'Shoes' },
-];
+import { useData } from '../context/DataContext';
 
 export default function Header() {
   const { route, navigate } = useRouter();
   const { itemCount, openCart } = useCart();
+  const { categories } = useData();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Main categories = those without a parent_id. Sub categories grouped by parent.
+  const mainCategories = categories.filter((c) => !c.parent_id);
+  const subCategoriesOf = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -42,38 +38,13 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const navLinks = [
-    { label: 'Home', path: '/' },
-    { label: 'About', path: '/about' },
-    { label: 'Returns', path: '/returns' },
-    { label: 'Contact', path: '/contact' },
-  ];
-
-  const isActive = (path: string) => {
-    if (path === '/') return route.name === 'home';
-    if (path === '/shop') return route.name === 'shop' && !route.demographic;
-    if (path.startsWith('/shop/')) {
-      const parts = path.split('/').filter(Boolean);
-      if (parts.length === 2) {
-        return route.name === 'shop' && route.demographic === parts[1] && !route.productType;
-      }
-      if (parts.length === 3) {
-        return (
-          route.name === 'shop' &&
-          route.demographic === parts[1] &&
-          route.productType === parts[2]
-        );
-      }
-    }
-    if (path === '/about') return route.name === 'about';
-    if (path === '/returns') return route.name === 'returns';
-    if (path === '/contact') return route.name === 'contact';
-    return false;
+  const isCategoryActive = (slug: string, subSlug?: string) => {
+    if (route.name !== 'shop') return false;
+    if (subSlug) return route.categorySlug === slug && route.subSlug === subSlug;
+    return route.categorySlug === slug && !route.subSlug;
   };
 
-  const isDemographicActive = (slug: string) => {
-    return route.name === 'shop' && route.demographic === slug;
-  };
+  const isShopActive = route.name === 'shop';
 
   return (
     <>
@@ -100,111 +71,112 @@ export default function Header() {
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
 
-            {/* Logo */}
+            {/* Logo + slogan */}
             <button
               onClick={() => navigate('/')}
-              className="font-serif text-2xl sm:text-3xl text-ink-700 font-medium tracking-tight"
+              className="flex flex-col items-center text-center leading-none"
             >
-              Eyara<span className="text-bronze-500">store</span>
+              <span className="font-serif text-2xl sm:text-3xl text-ink-700 font-medium tracking-tight">
+                Eyara<span className="text-bronze-500">store</span>
+              </span>
+              <span className="text-[9px] sm:text-[10px] tracking-[0.25em] uppercase text-bronze-500 mt-0.5">
+                Wear the Vibe, Own the Street
+              </span>
             </button>
 
-            {/* Desktop nav */}
-            <nav className="hidden lg:flex items-center gap-8">
-              {/* Demographics with dropdown */}
-              {demographics.map((demo) => (
-                <div
-                  key={demo.slug}
-                  className="relative"
-                  onMouseEnter={() => setActiveDropdown(demo.slug)}
-                  onMouseLeave={() => setActiveDropdown(null)}
-                >
-                  <button
-                    onClick={() => navigate(`/shop/${demo.slug}`)}
-                    className={`text-sm tracking-wide transition-colors relative py-1 flex items-center gap-1 ${
-                      isDemographicActive(demo.slug)
-                        ? 'text-bronze-500'
-                        : 'text-ink-600 hover:text-bronze-500'
-                    }`}
-                  >
-                    {demo.name}
-                    <ChevronDown
-                      size={12}
-                      className={`transition-transform duration-200 ${
-                        activeDropdown === demo.slug ? 'rotate-180' : ''
-                      }`}
-                    />
-                    <span
-                      className={`absolute -bottom-0.5 left-0 right-0 h-px bg-bronze-500 transition-transform duration-300 origin-left ${
-                        isDemographicActive(demo.slug) ? 'scale-x-100' : 'scale-x-0'
-                      }`}
-                    />
-                  </button>
+            {/* Desktop nav — dynamic main categories with sub dropdowns */}
+            <nav className="hidden lg:flex items-center gap-7" ref={dropdownRef}>
+              <button
+                onClick={() => navigate('/shop')}
+                className={`text-sm tracking-wide transition-colors relative py-1 ${
+                  isShopActive && !route.categorySlug
+                    ? 'text-bronze-500'
+                    : 'text-ink-600 hover:text-bronze-500'
+                }`}
+              >
+                All Products
+                <span
+                  className={`absolute -bottom-0.5 left-0 right-0 h-px bg-bronze-500 transition-transform duration-300 origin-left ${
+                    isShopActive && !route.categorySlug ? 'scale-x-100' : 'scale-x-0'
+                  }`}
+                />
+              </button>
 
-                  {/* Dropdown menu */}
+              {mainCategories.map((cat) => {
+                const subs = subCategoriesOf(cat.id);
+                const hasSubs = subs.length > 0;
+                return (
                   <div
-                    className={`absolute top-full left-0 mt-2 min-w-[160px] bg-cream-50 border border-sage-200 shadow-lg transition-all duration-200 ${
-                      activeDropdown === demo.slug
-                        ? 'opacity-100 translate-y-0 visible'
-                        : 'opacity-0 -translate-y-2 invisible'
-                    }`}
+                    key={cat.id}
+                    className="relative"
+                    onMouseEnter={() => hasSubs && setActiveDropdown(cat.slug)}
+                    onMouseLeave={() => setActiveDropdown(null)}
                   >
                     <button
-                      onClick={() => navigate(`/shop/${demo.slug}`)}
-                      className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                        isActive(`/shop/${demo.slug}`)
-                          ? 'text-bronze-500 bg-cream-100'
-                          : 'text-ink-600 hover:bg-cream-100 hover:text-bronze-500'
+                      onClick={() => navigate(`/shop/${cat.slug}`)}
+                      className={`text-sm tracking-wide transition-colors relative py-1 flex items-center gap-1 ${
+                        isCategoryActive(cat.slug)
+                          ? 'text-bronze-500'
+                          : 'text-ink-600 hover:text-bronze-500'
                       }`}
                     >
-                      All {demo.name}
+                      {cat.name}
+                      {hasSubs && (
+                        <ChevronDown
+                          size={12}
+                          className={`transition-transform duration-200 ${
+                            activeDropdown === cat.slug ? 'rotate-180' : ''
+                          }`}
+                        />
+                      )}
+                      <span
+                        className={`absolute -bottom-0.5 left-0 right-0 h-px bg-bronze-500 transition-transform duration-300 origin-left ${
+                          isCategoryActive(cat.slug) ? 'scale-x-100' : 'scale-x-0'
+                        }`}
+                      />
                     </button>
-                    <div className="border-t border-sage-100" />
-                    {productTypes.map((type) => (
-                      <button
-                        key={type.slug}
-                        onClick={() => navigate(`/shop/${demo.slug}/${type.slug}`)}
-                        className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                          isActive(`/shop/${demo.slug}/${type.slug}`)
-                            ? 'text-bronze-500 bg-cream-100'
-                            : 'text-ink-600 hover:bg-cream-100 hover:text-bronze-500'
+
+                    {hasSubs && (
+                      <div
+                        className={`absolute top-full left-0 mt-2 min-w-[180px] bg-cream-50 border border-sage-200 shadow-lg transition-all duration-200 ${
+                          activeDropdown === cat.slug
+                            ? 'opacity-100 translate-y-0 visible'
+                            : 'opacity-0 -translate-y-2 invisible'
                         }`}
                       >
-                        {type.name}
-                      </button>
-                    ))}
+                        <button
+                          onClick={() => navigate(`/shop/${cat.slug}`)}
+                          className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                            isCategoryActive(cat.slug)
+                              ? 'text-bronze-500 bg-cream-100'
+                              : 'text-ink-600 hover:bg-cream-100 hover:text-bronze-500'
+                          }`}
+                        >
+                          All {cat.name}
+                        </button>
+                        <div className="border-t border-sage-100" />
+                        {subs.map((sub) => (
+                          <button
+                            key={sub.id}
+                            onClick={() => navigate(`/shop/${cat.slug}/${sub.slug}`)}
+                            className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                              isCategoryActive(cat.slug, sub.slug)
+                                ? 'text-bronze-500 bg-cream-100'
+                                : 'text-ink-600 hover:bg-cream-100 hover:text-bronze-500'
+                            }`}
+                          >
+                            {sub.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
-
-              {/* Static nav links */}
-              {navLinks.map((link) => (
-                <button
-                  key={link.path}
-                  onClick={() => navigate(link.path)}
-                  className={`text-sm tracking-wide transition-colors relative py-1 ${
-                    isActive(link.path)
-                      ? 'text-bronze-500'
-                      : 'text-ink-600 hover:text-bronze-500'
-                  }`}
-                >
-                  {link.label}
-                  <span
-                    className={`absolute -bottom-0.5 left-0 right-0 h-px bg-bronze-500 transition-transform duration-300 origin-left ${
-                      isActive(link.path) ? 'scale-x-100' : 'scale-x-0'
-                    }`}
-                  />
-                </button>
-              ))}
+                );
+              })}
             </nav>
 
             {/* Actions */}
             <div className="flex items-center gap-4">
-              <button
-                className="text-ink-600 hover:text-bronze-500 transition-colors hidden sm:block"
-                aria-label="Search"
-              >
-                <Search size={20} strokeWidth={1.5} />
-              </button>
               <button
                 onClick={openCart}
                 className="relative text-ink-600 hover:text-bronze-500 transition-colors"
@@ -225,61 +197,47 @@ export default function Header() {
         {mobileOpen && (
           <nav className="lg:hidden border-t border-sage-200 bg-cream-50 animate-fade-in">
             <div className="container-lux py-4">
-              {/* Demographics */}
-              {demographics.map((demo) => (
-                <div key={demo.slug} className="border-b border-sage-100">
-                  <button
-                    onClick={() => navigate(`/shop/${demo.slug}`)}
-                    className={`w-full text-left py-3 text-sm font-medium tracking-wide transition-colors ${
-                      isDemographicActive(demo.slug)
-                        ? 'text-bronze-500'
-                        : 'text-ink-600'
-                    }`}
-                  >
-                    {demo.name}
-                  </button>
-                  <div className="pb-3 pl-4 flex flex-col gap-2">
+              <button
+                onClick={() => navigate('/shop')}
+                className={`w-full text-left py-3 text-sm font-medium tracking-wide border-b border-sage-100 transition-colors ${
+                  isShopActive && !route.categorySlug ? 'text-bronze-500' : 'text-ink-600'
+                }`}
+              >
+                All Products
+              </button>
+
+              {mainCategories.map((cat) => {
+                const subs = subCategoriesOf(cat.id);
+                return (
+                  <div key={cat.id} className="border-b border-sage-100">
                     <button
-                      onClick={() => navigate(`/shop/${demo.slug}`)}
-                      className={`text-left text-xs tracking-wide transition-colors ${
-                        isActive(`/shop/${demo.slug}`)
-                          ? 'text-bronze-500'
-                          : 'text-sage-500 hover:text-bronze-500'
+                      onClick={() => navigate(`/shop/${cat.slug}`)}
+                      className={`w-full text-left py-3 text-sm font-medium tracking-wide transition-colors ${
+                        isCategoryActive(cat.slug) ? 'text-bronze-500' : 'text-ink-600'
                       }`}
                     >
-                      All {demo.name}
+                      {cat.name}
                     </button>
-                    {productTypes.map((type) => (
-                      <button
-                        key={type.slug}
-                        onClick={() => navigate(`/shop/${demo.slug}/${type.slug}`)}
-                        className={`text-left text-xs tracking-wide transition-colors ${
-                          isActive(`/shop/${demo.slug}/${type.slug}`)
-                            ? 'text-bronze-500'
-                            : 'text-sage-500 hover:text-bronze-500'
-                        }`}
-                      >
-                        {type.name}
-                      </button>
-                    ))}
+                    {subs.length > 0 && (
+                      <div className="pb-3 pl-4 flex flex-col gap-2">
+                        {subs.map((sub) => (
+                          <button
+                            key={sub.id}
+                            onClick={() => navigate(`/shop/${cat.slug}/${sub.slug}`)}
+                            className={`text-left text-xs tracking-wide transition-colors ${
+                              isCategoryActive(cat.slug, sub.slug)
+                                ? 'text-bronze-500'
+                                : 'text-sage-500 hover:text-bronze-500'
+                            }`}
+                          >
+                            {sub.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
-
-              {/* Static nav links */}
-              {navLinks.map((link) => (
-                <button
-                  key={link.path}
-                  onClick={() => navigate(link.path)}
-                  className={`w-full text-left py-3 text-sm tracking-wide border-b border-sage-100 last:border-0 transition-colors ${
-                    isActive(link.path)
-                      ? 'text-bronze-500'
-                      : 'text-ink-600 hover:text-bronze-500'
-                  }`}
-                >
-                  {link.label}
-                </button>
-              ))}
+                );
+              })}
             </div>
           </nav>
         )}

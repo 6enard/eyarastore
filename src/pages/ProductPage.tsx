@@ -1,20 +1,53 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ShoppingBag, Minus, Plus, ChevronRight, Check, Truck, RefreshCw, Shield } from 'lucide-react';
 import { useProduct, useRelatedProducts } from '../hooks/useData';
+import { useData } from '../context/DataContext';
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
 import { formatPrice } from '../lib/format';
-import StarRating from '../components/StarRating';
+import { productPricing, variantPricing } from '../lib/pricing';
+import type { ProductVariant } from '../hooks/useData';
 import ProductCard from '../components/ProductCard';
 
 export default function ProductPage({ slug }: { slug: string }) {
   const { product, loading, error } = useProduct(slug);
+  const { variants } = useData();
   const { products: related, loading: relatedLoading } = useRelatedProducts(product);
   const { addItem } = useCart();
   const { navigate } = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [added, setAdded] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+
+  const productVariants = useMemo(
+    () => (product ? variants.filter((v) => v.product_id === product.id) : []),
+    [variants, product],
+  );
+
+  const sizes = useMemo(
+    () => Array.from(new Set(productVariants.map((v) => v.size).filter(Boolean))) as string[],
+    [productVariants],
+  );
+  const colors = useMemo(
+    () => Array.from(new Set(productVariants.map((v) => v.color).filter(Boolean))) as string[],
+    [productVariants],
+  );
+
+  const selectedVariant: ProductVariant | null = useMemo(() => {
+    if (productVariants.length === 0) return null;
+    // If sizes/colors exist, require a selection; otherwise pick the first variant.
+    if (sizes.length > 0 && !selectedSize) return null;
+    if (colors.length > 0 && !selectedColor) return null;
+    return (
+      productVariants.find(
+        (v) =>
+          (sizes.length === 0 || v.size === selectedSize) &&
+          (colors.length === 0 || v.color === selectedColor),
+      ) || null
+    );
+  }, [productVariants, sizes, colors, selectedSize, selectedColor]);
 
   if (loading) {
     return (
@@ -46,14 +79,45 @@ export default function ProductPage({ slug }: { slug: string }) {
     );
   }
 
-  const hasDiscount = product.compare_at_price && product.compare_at_price > product.price;
-  const galleryImages = [product.image_url || '', ...(product.gallery || [])];
+  const basePricing = productPricing(product);
+  const pricing = selectedVariant
+    ? variantPricing(selectedVariant, product)
+    : basePricing;
+  const hasVariants = productVariants.length > 0;
+  const variantStock = selectedVariant ? selectedVariant.stock : null;
+  const variantOutOfStock = selectedVariant != null && variantStock !== null && variantStock <= 0;
+  const canAddToCart = product.in_stock && (!hasVariants || (selectedVariant != null && !variantOutOfStock));
+
+  const galleryImages = [product.image_url || '', ...(product.gallery || [])].filter(Boolean);
 
   const handleAddToCart = () => {
-    addItem(product as any, quantity);
+    if (!canAddToCart) return;
+    const cartProduct = {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: pricing.price,
+      image_url: product.image_url,
+      in_stock: product.in_stock,
+      category_id: product.category_id,
+    };
+    const cartVariant = selectedVariant
+      ? {
+          id: selectedVariant.id,
+          sku: selectedVariant.sku,
+          size: selectedVariant.size,
+          color: selectedVariant.color,
+          price: pricing.price,
+          stock: selectedVariant.stock,
+        }
+      : null;
+    addItem(cartProduct, cartVariant, quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
+
+  const features = product.description_features?.filter((f) => f.trim()) || [];
+  const paragraph = product.description_paragraph || product.description || '';
 
   return (
     <div>
@@ -64,28 +128,6 @@ export default function ProductPage({ slug }: { slug: string }) {
             <button onClick={() => navigate('/')} className="hover:text-bronze-500 transition-colors">Home</button>
             <ChevronRight size={12} />
             <button onClick={() => navigate('/shop')} className="hover:text-bronze-500 transition-colors">Shop</button>
-            {product.demographic && (
-              <>
-                <ChevronRight size={12} />
-                <button
-                  onClick={() => navigate(`/shop/${product.demographic}`)}
-                  className="hover:text-bronze-500 transition-colors capitalize"
-                >
-                  {product.demographic}'s
-                </button>
-              </>
-            )}
-            {product.product_type && (
-              <>
-                <ChevronRight size={12} />
-                <button
-                  onClick={() => navigate(`/shop/${product.demographic}/${product.product_type}`)}
-                  className="hover:text-bronze-500 transition-colors capitalize"
-                >
-                  {product.product_type}
-                </button>
-              </>
-            )}
             <ChevronRight size={12} />
             <span className="text-ink-600 truncate">{product.name}</span>
           </nav>
@@ -106,12 +148,12 @@ export default function ProductPage({ slug }: { slug: string }) {
               />
             </div>
             {galleryImages.length > 1 && (
-              <div className="flex gap-3">
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide">
                 {galleryImages.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveImage(i)}
-                    className={`w-20 h-24 overflow-hidden bg-cream-100 transition-all ${
+                    className={`w-20 h-24 flex-shrink-0 overflow-hidden bg-cream-100 transition-all ${
                       activeImage === i
                         ? 'ring-2 ring-bronze-500 ring-offset-2 ring-offset-cream-50'
                         : 'opacity-60 hover:opacity-100'
@@ -126,48 +168,46 @@ export default function ProductPage({ slug }: { slug: string }) {
 
           {/* Info */}
           <div className="lg:pt-4">
-            <div className="flex items-center gap-2 mb-3">
-              <p className="eyebrow mb-0">{product.demographic}'s</p>
-              <span className="text-sage-300">|</span>
-              <p className="text-xs font-medium tracking-[0.2em] uppercase text-sage-500 mb-0">{product.product_type}</p>
-            </div>
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-ink-700 font-light mb-4 leading-tight">
               {product.name}
             </h1>
 
-            <div className="flex items-center gap-3 mb-6">
-              <StarRating rating={product.rating} size={16} />
-              <span className="text-sm text-sage-500">
-                {product.rating} ({product.review_count} reviews)
-              </span>
-            </div>
-
             <div className="flex items-baseline gap-3 mb-6">
               <span className="font-serif text-3xl text-ink-700 font-medium">
-                {formatPrice(product.price)}
+                {formatPrice(pricing.price)}
               </span>
-              {hasDiscount && (
+              {pricing.onSale && pricing.compareAt != null && (
                 <>
                   <span className="text-lg text-sage-400 line-through">
-                    {formatPrice(product.compare_at_price as number)}
+                    {formatPrice(pricing.compareAt)}
                   </span>
                   <span className="bg-bronze-500 text-cream-50 text-xs font-medium tracking-widest uppercase px-2.5 py-1">
-                    Save {formatPrice((product.compare_at_price as number) - product.price)}
+                    Save {formatPrice(pricing.compareAt - pricing.price)}
                   </span>
                 </>
               )}
+              {!pricing.onSale && pricing.compareAt != null && pricing.compareAt > pricing.price && (
+                <span className="text-lg text-sage-400 line-through">
+                  {formatPrice(pricing.compareAt)}
+                </span>
+              )}
             </div>
-
-            <p className="text-ink-600 leading-relaxed mb-8">
-              {product.description || ''}
-            </p>
 
             {/* Stock status */}
             <div className="flex items-center gap-2 mb-6">
-              {product.in_stock ? (
+              {canAddToCart ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-green-600" />
-                  <span className="text-sm text-ink-600">In Stock</span>
+                  <span className="text-sm text-ink-600">
+                    {hasVariants && selectedVariant && variantStock !== null
+                      ? `${variantStock} in stock`
+                      : 'In Stock'}
+                  </span>
+                </>
+              ) : variantOutOfStock ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-red-500" />
+                  <span className="text-sm text-ink-600">Selected variant out of stock</span>
                 </>
               ) : (
                 <>
@@ -176,6 +216,85 @@ export default function ProductPage({ slug }: { slug: string }) {
                 </>
               )}
             </div>
+
+            {/* Paragraph description */}
+            {paragraph && (
+              <p className="text-ink-600 leading-relaxed mb-6 whitespace-pre-line">
+                {paragraph}
+              </p>
+            )}
+
+            {/* Bullet-point features */}
+            {features.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-xs font-medium tracking-[0.2em] uppercase text-ink-500 mb-3">Product Features</h2>
+                <ul className="space-y-2">
+                  {features.map((feature, i) => (
+                    <li key={i} className="flex gap-2.5 text-ink-600 leading-relaxed">
+                      <Check size={16} className="text-bronze-500 mt-0.5 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Variants — Size selector */}
+            {sizes.length > 0 && (
+              <div className="mb-5">
+                <label className="label-lux">Size</label>
+                <div className="flex flex-wrap gap-2">
+                  {sizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`min-w-[3rem] px-4 py-2.5 text-sm tracking-wide transition-colors border ${
+                        selectedSize === size
+                          ? 'border-bronze-500 bg-bronze-50 text-ink-700 font-medium'
+                          : 'border-sage-300 text-ink-600 hover:border-bronze-400'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Variants — Color selector */}
+            {colors.length > 0 && (
+              <div className="mb-5">
+                <label className="label-lux">Color</label>
+                <div className="flex flex-wrap gap-2">
+                  {colors.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className={`px-4 py-2.5 text-sm tracking-wide transition-colors border ${
+                        selectedColor === color
+                          ? 'border-bronze-500 bg-bronze-50 text-ink-700 font-medium'
+                          : 'border-sage-300 text-ink-600 hover:border-bronze-400'
+                      }`}
+                    >
+                      {color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Variant needs selection hint */}
+            {hasVariants && !selectedVariant && (sizes.length > 0 || colors.length > 0) && (
+              <p className="text-xs text-bronze-500 mb-4">
+                {sizes.length > 0 && !selectedSize && 'Please select a size. '}
+                {colors.length > 0 && !selectedColor && 'Please select a color.'}
+              </p>
+            )}
+
+            {/* Selected SKU display */}
+            {selectedVariant && (
+              <p className="text-xs text-sage-500 mb-4">SKU: {selectedVariant.sku}</p>
+            )}
 
             {/* Quantity + Add to cart */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -198,7 +317,7 @@ export default function ProductPage({ slug }: { slug: string }) {
               </div>
               <button
                 onClick={handleAddToCart}
-                disabled={!product.in_stock}
+                disabled={!canAddToCart}
                 className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {added ? (

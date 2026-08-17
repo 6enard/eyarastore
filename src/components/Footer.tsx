@@ -1,9 +1,11 @@
 import { Instagram, Facebook, Twitter, Mail, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from '../context/RouterContext';
+import { useData } from '../context/DataContext';
 
 export default function Footer() {
   const { navigate } = useRouter();
+  const { categories } = useData();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -16,12 +18,12 @@ export default function Footer() {
     }
   };
 
-  const shopLinks = [
-    { label: 'All Products', path: '/shop' },
-    { label: "Men's Clothes", path: '/shop/men/clothes' },
-    { label: "Men's Shoes", path: '/shop/men/shoes' },
-    { label: "Women's Clothes", path: '/shop/women/clothes' },
-    { label: "Women's Shoes", path: '/shop/women/shoes' },
+  const mainCategories = categories.filter((c) => !c.parent_id);
+  const companyLinks = [
+    { label: 'Home', path: '/' },
+    { label: 'About Us', path: '/about' },
+    { label: 'Returns & Refunds', path: '/returns' },
+    { label: 'Contact', path: '/contact' },
   ];
 
   return (
@@ -64,25 +66,36 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <button
               onClick={() => navigate('/')}
-              className="font-serif text-2xl text-cream-100 font-medium tracking-tight mb-4 block"
+              className="font-serif text-2xl text-cream-100 font-medium tracking-tight mb-1 block"
             >
               Eyara<span className="text-bronze-400">store</span>
             </button>
+            <p className="text-[10px] tracking-[0.25em] uppercase text-bronze-400 mb-4">
+              Wear the Vibe, Own the Street
+            </p>
             <p className="text-cream-200/60 text-sm leading-relaxed max-w-xs">
-              Wear the Vibe, Own the Street. Stylish, affordable fashion for every age, every vibe, every day.
+              Stylish, affordable fashion for every age, every vibe, every day.
             </p>
           </div>
 
           <div>
             <h3 className="text-xs font-medium tracking-[0.2em] uppercase text-cream-300 mb-5">Shop</h3>
             <ul className="space-y-3">
-              {shopLinks.map((link) => (
-                <li key={link.path}>
+              <li>
+                <button
+                  onClick={() => navigate('/shop')}
+                  className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors"
+                >
+                  All Products
+                </button>
+              </li>
+              {mainCategories.slice(0, 6).map((cat) => (
+                <li key={cat.id}>
                   <button
-                    onClick={() => navigate(link.path)}
+                    onClick={() => navigate(`/shop/${cat.slug}`)}
                     className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors"
                   >
-                    {link.label}
+                    {cat.name}
                   </button>
                 </li>
               ))}
@@ -92,10 +105,16 @@ export default function Footer() {
           <div>
             <h3 className="text-xs font-medium tracking-[0.2em] uppercase text-cream-300 mb-5">Company</h3>
             <ul className="space-y-3">
-              <li><button onClick={() => navigate('/about')} className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors">About Us</button></li>
-              <li><button onClick={() => navigate('/contact')} className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors">Contact</button></li>
-              <li><button onClick={() => navigate('/returns')} className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors">Returns &amp; Refunds</button></li>
-              <li><button onClick={() => navigate('/contact')} className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors">Contact</button></li>
+              {companyLinks.map((link) => (
+                <li key={link.path}>
+                  <button
+                    onClick={() => navigate(link.path)}
+                    className="text-sm text-cream-200/70 hover:text-bronze-400 transition-colors"
+                  >
+                    {link.label}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 

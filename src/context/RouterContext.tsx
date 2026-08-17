@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 
 type Route =
   | { name: 'home' }
-  | { name: 'shop'; demographic?: string; productType?: string }
+  | { name: 'shop'; categorySlug?: string; subSlug?: string }
   | { name: 'product'; slug: string }
   | { name: 'about' }
   | { name: 'contact' }
@@ -22,8 +22,8 @@ function parsePath(path: string): Route {
 
   if (parts.length === 0) return { name: 'home' };
   if (parts[0] === 'shop') {
-    if (parts[1] && parts[2]) return { name: 'shop', demographic: parts[1], productType: parts[2] };
-    if (parts[1]) return { name: 'shop', demographic: parts[1] };
+    if (parts[1] && parts[2]) return { name: 'shop', categorySlug: parts[1], subSlug: parts[2] };
+    if (parts[1]) return { name: 'shop', categorySlug: parts[1] };
     return { name: 'shop' };
   }
   if (parts[0] === 'product' && parts[1]) {
@@ -40,8 +40,8 @@ function routeToPath(route: Route): string {
   switch (route.name) {
     case 'home': return '/';
     case 'shop':
-      if (route.demographic && route.productType) return `/shop/${route.demographic}/${route.productType}`;
-      if (route.demographic) return `/shop/${route.demographic}`;
+      if (route.categorySlug && route.subSlug) return `/shop/${route.categorySlug}/${route.subSlug}`;
+      if (route.categorySlug) return `/shop/${route.categorySlug}`;
       return '/shop';
     case 'product': return `/product/${route.slug}`;
     case 'about': return '/about';

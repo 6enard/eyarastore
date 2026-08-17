@@ -19,7 +19,7 @@ function Pages() {
     case 'home':
       return <HomePage />;
     case 'shop':
-      return <ShopPage demographic={route.demographic} productType={route.productType} />;
+      return <ShopPage categorySlug={route.categorySlug} subSlug={route.subSlug} />;
     case 'product':
       return <ProductPage slug={route.slug} />;
     case 'about':
