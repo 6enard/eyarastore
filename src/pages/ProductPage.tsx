@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ShoppingBag, Minus, Plus, ChevronRight, Check, Truck, RefreshCw, Shield } from 'lucide-react';
+import { ShoppingBag, Minus, Plus, ChevronRight, Check, Truck, RefreshCw, Shield, AlertCircle } from 'lucide-react';
 import { useProduct, useRelatedProducts } from '../hooks/useData';
 import { useData } from '../context/DataContext';
 import { useCart } from '../context/CartContext';
@@ -18,6 +18,7 @@ export default function ProductPage({ slug }: { slug: string }) {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [added, setAdded] = useState(false);
+  const [selectError, setSelectError] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
@@ -93,6 +94,14 @@ export default function ProductPage({ slug }: { slug: string }) {
   const galleryImages = [product.image_url || '', ...(product.gallery || [])].filter(Boolean);
 
   const handleAddToCart = () => {
+    if (needsSelection) {
+      const missing: string[] = [];
+      if (sizes.length > 0 && !selectedSize) missing.push('size');
+      if (colors.length > 0 && !selectedColor) missing.push('color');
+      setSelectError(`Please select a ${missing.join(' and ')} first.`);
+      setTimeout(() => setSelectError(null), 3000);
+      return;
+    }
     if (!canAddToCart) return;
     const cartProduct = {
       id: product.id,
@@ -295,14 +304,6 @@ export default function ProductPage({ slug }: { slug: string }) {
               </div>
             )}
 
-            {/* Variant needs selection hint */}
-            {hasVariants && !selectedVariant && (sizes.length > 0 || colors.length > 0) && (
-              <p className="text-xs text-bronze-500 mb-4">
-                {sizes.length > 0 && !selectedSize && 'Please select a size. '}
-                {colors.length > 0 && !selectedColor && 'Please select a color.'}
-              </p>
-            )}
-
             {/* Selected SKU display */}
             {selectedVariant && (
               <p className="text-xs text-sage-500 mb-4">SKU: {selectedVariant.sku}</p>
@@ -329,7 +330,7 @@ export default function ProductPage({ slug }: { slug: string }) {
               </div>
               <button
                 onClick={handleAddToCart}
-                disabled={!canAddToCart}
+                disabled={!canAddToCart && !needsSelection}
                 className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {added ? (
@@ -345,6 +346,16 @@ export default function ProductPage({ slug }: { slug: string }) {
                 )}
               </button>
             </div>
+
+            {/* Selection-required notification */}
+            {selectError && (
+              <div className="mb-8 animate-fade-in">
+                <div className="flex items-center gap-2.5 px-4 py-3 bg-bronze-50 border border-bronze-300 text-sm text-bronze-700">
+                  <AlertCircle size={18} className="text-bronze-500 flex-shrink-0" />
+                  {selectError}
+                </div>
+              </div>
+            )}
 
             {/* Trust badges */}
             <div className="grid grid-cols-3 gap-4 py-6 border-t border-b border-sage-200">
