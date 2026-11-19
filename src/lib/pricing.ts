@@ -60,6 +60,21 @@ export function productPricing(product: Product): {
   return { price, compareAt, onSale, discountPercent };
 }
 
+/**
+ * Whether a product can be purchased at all, considering variants.
+ * When variants exist, the product is available if any variant has stock > 0.
+ * Without variants, falls back to the product-level in_stock flag.
+ */
+export function isProductAvailable(
+  product: Pick<Product, 'in_stock'>,
+  variants: { stock: number }[],
+): boolean {
+  if (variants.length > 0) {
+    return variants.some((v) => v.stock > 0);
+  }
+  return product.in_stock;
+}
+
 export function variantPricing(
   variant: ProductVariant,
   product: Product,

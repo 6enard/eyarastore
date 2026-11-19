@@ -1,6 +1,7 @@
 import type { Product } from '../hooks/useData';
+import { useData } from '../context/DataContext';
 import { useRouter } from '../context/RouterContext';
-import { productPricing } from '../lib/pricing';
+import { productPricing, isProductAvailable } from '../lib/pricing';
 import { formatPrice } from '../lib/format';
 
 interface ProductCardProps {
@@ -10,7 +11,10 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { navigate } = useRouter();
+  const { variants } = useData();
   const { price, compareAt, onSale, discountPercent } = productPricing(product);
+  const productVariants = variants.filter((v) => v.product_id === product.id);
+  const available = isProductAvailable(product, productVariants);
 
   return (
     <article
@@ -32,7 +36,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             -{discountPercent}%
           </span>
         )}
-        {!product.in_stock && (
+        {!available && (
           <span className="absolute top-3 left-3 bg-ink-700 text-cream-100 text-[10px] font-medium tracking-widest uppercase px-2.5 py-1">
             Sold Out
           </span>

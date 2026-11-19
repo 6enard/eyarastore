@@ -5,7 +5,7 @@ import { useData } from '../context/DataContext';
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
 import { formatPrice } from '../lib/format';
-import { productPricing, variantPricing } from '../lib/pricing';
+import { productPricing, variantPricing, isProductAvailable } from '../lib/pricing';
 import type { ProductVariant } from '../hooks/useData';
 import ProductCard from '../components/ProductCard';
 
@@ -86,7 +86,9 @@ export default function ProductPage({ slug }: { slug: string }) {
   const hasVariants = productVariants.length > 0;
   const variantStock = selectedVariant ? selectedVariant.stock : null;
   const variantOutOfStock = selectedVariant != null && variantStock !== null && variantStock <= 0;
-  const canAddToCart = product.in_stock && (!hasVariants || (selectedVariant != null && !variantOutOfStock));
+  const productAvailable = isProductAvailable(product, productVariants);
+  const needsSelection = hasVariants && !selectedVariant && (sizes.length > 0 || colors.length > 0);
+  const canAddToCart = productAvailable && (!hasVariants || (selectedVariant != null && !variantOutOfStock));
 
   const galleryImages = [product.image_url || '', ...(product.gallery || [])].filter(Boolean);
 
@@ -202,6 +204,16 @@ export default function ProductPage({ slug }: { slug: string }) {
                     {hasVariants && selectedVariant && variantStock !== null
                       ? `${variantStock} in stock`
                       : 'In Stock'}
+                  </span>
+                </>
+              ) : needsSelection ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-bronze-500" />
+                  <span className="text-sm text-ink-600">
+                    {sizes.length > 0 && !selectedSize && 'Select a size'}
+                    {sizes.length > 0 && !selectedSize && colors.length > 0 && !selectedColor && ' & color'}
+                    {sizes.length > 0 && selectedSize && colors.length > 0 && !selectedColor && 'Select a color'}
+                    {sizes.length === 0 && colors.length > 0 && !selectedColor && 'Select a color'}
                   </span>
                 </>
               ) : variantOutOfStock ? (
